@@ -83,13 +83,17 @@ export default async function PrepPage({
           </div>
           <div className="flex gap-2">
             {enrollments.length > 1 && (
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/dashboard">All paths</Link>
-              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                render={<Link href="/dashboard">All paths</Link>}
+              />
             )}
-            <Button asChild variant="outline" size="sm">
-              <Link href="/onboarding">+ New stack</Link>
-            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href="/onboarding">+ New stack</Link>}
+            />
           </div>
         </div>
 

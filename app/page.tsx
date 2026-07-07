@@ -50,12 +50,15 @@ export default function Home() {
           voice-based mock interviews with detailed feedback.
         </p>
         <div className="flex justify-center gap-3 pt-2">
-          <Button asChild size="lg">
-            <Link href="/login">Get started free</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/dashboard">Open dashboard</Link>
-          </Button>
+          <Button
+            size="lg"
+            render={<Link href="/login">Get started free</Link>}
+          />
+          <Button
+            size="lg"
+            variant="outline"
+            render={<Link href="/dashboard">Open dashboard</Link>}
+          />
         </div>
       </div>
 

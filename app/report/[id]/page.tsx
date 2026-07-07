@@ -226,17 +226,21 @@ export default async function ReportPage({
               ))}
             </ol>
             {interview?.curriculum_id && (
-              <Button asChild size="sm" variant="outline">
-                <Link href={`/prep?c=${interview.curriculum_id}`}>
-                  Open your roadmap to restudy →
-                </Link>
-              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                render={
+                  <Link href={`/prep?c=${interview.curriculum_id}`}>
+                    Open your roadmap to restudy →
+                  </Link>
+                }
+              />
             )}
           </CardContent>
         </Card>
 
         {/* Transcript replay */}
-        <Accordion type="single" collapsible>
+        <Accordion multiple={false}>
           <AccordionItem value="transcript" className="rounded-lg border px-4">
             <AccordionTrigger className="text-sm font-medium hover:no-underline">
               Replay full transcript
@@ -257,12 +261,14 @@ export default async function ReportPage({
         </Accordion>
 
         <div className="flex justify-center gap-3 pb-6">
-          <Button asChild variant="outline">
-            <Link href="/interview/new">Another round</Link>
-          </Button>
-          <Button asChild variant="ghost">
-            <Link href="/dashboard">Back to dashboard</Link>
-          </Button>
+          <Button
+            variant="outline"
+            render={<Link href="/interview/new">Another round</Link>}
+          />
+          <Button
+            variant="ghost"
+            render={<Link href="/dashboard">Back to dashboard</Link>}
+          />
         </div>
       </main>
     </>

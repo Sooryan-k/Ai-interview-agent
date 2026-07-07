@@ -108,7 +108,10 @@ export function NewInterviewForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Round type</Label>
-            <Select value={roundType} onValueChange={setRoundType}>
+            <Select
+              value={roundType}
+              onValueChange={(v) => v && setRoundType(v)}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -123,7 +126,10 @@ export function NewInterviewForm({
           </div>
           <div className="space-y-1.5">
             <Label>Difficulty</Label>
-            <Select value={difficulty} onValueChange={setDifficulty}>
+            <Select
+              value={difficulty}
+              onValueChange={(v) => v && setDifficulty(v)}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>

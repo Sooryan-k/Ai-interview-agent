@@ -32,8 +32,9 @@ export function Roadmap({
 }) {
   return (
     <Accordion
-      type="multiple"
-      defaultValue={[structure.levels[currentLevel]?.key ?? structure.levels[0].key]}
+      defaultValue={[
+        structure.levels[currentLevel]?.key ?? structure.levels[0].key,
+      ]}
       className="space-y-3"
     >
       {structure.levels.map((level, levelIdx) => {
@@ -113,13 +114,17 @@ export function Roadmap({
                 </div>
               ))}
               <div className="pt-1">
-                <Button asChild size="sm" variant="outline">
-                  <Link
-                    href={`/interview/new?c=${curriculumId}&level=${levelIdx}`}
-                  >
-                    Take the {level.title} mock interview →
-                  </Link>
-                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  render={
+                    <Link
+                      href={`/interview/new?c=${curriculumId}&level=${levelIdx}`}
+                    >
+                      Take the {level.title} mock interview →
+                    </Link>
+                  }
+                />
               </div>
             </AccordionContent>
           </AccordionItem>

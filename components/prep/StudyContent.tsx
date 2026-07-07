@@ -200,14 +200,20 @@ export function StudyContent({
         >
           {status === "mastered" ? "✓ Mastered" : "Mark as mastered"}
         </Button>
-        <Button asChild variant="outline">
-          <Link href={`/interview/new?c=${curriculumId}&level=${levelIdx}`}>
-            Practice this in a mock interview →
-          </Link>
-        </Button>
-        <Button asChild variant="ghost">
-          <Link href={`/prep?c=${curriculumId}`}>← Back to roadmap</Link>
-        </Button>
+        <Button
+          variant="outline"
+          render={
+            <Link href={`/interview/new?c=${curriculumId}&level=${levelIdx}`}>
+              Practice this in a mock interview →
+            </Link>
+          }
+        />
+        <Button
+          variant="ghost"
+          render={
+            <Link href={`/prep?c=${curriculumId}`}>← Back to roadmap</Link>
+          }
+        />
       </div>
     </div>
   );
