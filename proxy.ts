@@ -17,8 +17,17 @@ export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // Allow the app to boot before Supabase is configured (setup screen shows).
-  if (!url || !anonKey) return response;
+  // Before Supabase is configured, the app still boots: public pages render,
+  // and protected pages route to /login, which shows the setup instructions.
+  if (!url || !anonKey) {
+    const path = request.nextUrl.pathname;
+    if (PROTECTED_PREFIXES.some((p) => path.startsWith(p))) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      return NextResponse.redirect(loginUrl);
+    }
+    return response;
+  }
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
