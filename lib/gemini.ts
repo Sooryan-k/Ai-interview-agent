@@ -21,9 +21,11 @@ export class RateLimitError extends Error {
 }
 
 function modelFor(tier: Tier): string {
+  // Rolling "-latest" aliases: stable pointers that won't get deprecated out
+  // from under us (dated snapshots like gemini-2.5-flash are retired for new keys).
   return tier === "turn"
-    ? process.env.GEMINI_TURN_MODEL || "gemini-2.5-flash-lite"
-    : process.env.GEMINI_SMART_MODEL || "gemini-2.5-flash";
+    ? process.env.GEMINI_TURN_MODEL || "gemini-flash-lite-latest"
+    : process.env.GEMINI_SMART_MODEL || "gemini-flash-latest";
 }
 
 function isMock() {
