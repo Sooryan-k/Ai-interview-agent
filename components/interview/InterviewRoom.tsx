@@ -254,9 +254,41 @@ export function InterviewRoom({
               Q {Math.min(aiTurnCount, questionCount)}/{questionCount}
             </span>
             {tts.supported && (
-              <Button size="sm" variant="ghost" onClick={tts.toggle}>
-                {tts.enabled ? "🔊 Voice on" : "🔇 Voice off"}
-              </Button>
+              <>
+                <Button size="sm" variant="ghost" onClick={tts.toggle}>
+                  {tts.enabled ? "🔊 Voice on" : "🔇 Voice off"}
+                </Button>
+                {tts.enabled && (
+                  <span className="flex overflow-hidden rounded-md border text-xs">
+                    <button
+                      type="button"
+                      onClick={() => tts.setGender("female")}
+                      className={cn(
+                        "px-2 py-1 transition-colors",
+                        tts.gender === "female"
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      )}
+                      title="Female interviewer voice"
+                    >
+                      ♀ Female
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => tts.setGender("male")}
+                      className={cn(
+                        "px-2 py-1 transition-colors",
+                        tts.gender === "male"
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      )}
+                      title="Male interviewer voice"
+                    >
+                      ♂ Male
+                    </button>
+                  </span>
+                )}
+              </>
             )}
             {phase !== "ended" && (
               <Button
