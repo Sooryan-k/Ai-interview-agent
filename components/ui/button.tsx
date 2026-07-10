@@ -44,12 +44,20 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  nativeButton,
+  render,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  // When `render` swaps in a non-<button> element (e.g. a Next.js <Link>/<a>),
+  // Base UI expects nativeButton=false so it drops native <button> semantics.
+  const resolvedNativeButton =
+    render != null ? (nativeButton ?? false) : nativeButton
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      nativeButton={resolvedNativeButton}
+      render={render}
       {...props}
     />
   )
