@@ -52,8 +52,16 @@ export default function OnboardingPage() {
   const [experience, setExperience] = useState("beginner");
   const [targetRole, setTargetRole] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pct, setPct] = useState(0);
+  const [stageMsg, setStageMsg] = useState("Starting…");
 
   const effectiveStack = stack === "__custom__" ? customStack.trim() : stack;
+
+  function fail(message: string) {
+    toast.error(message);
+    setLoading(false);
+    setPct(0);
+  }
 
   async function submit() {
     if (!effectiveStack) {
@@ -61,8 +69,12 @@ export default function OnboardingPage() {
       return;
     }
     setLoading(true);
+    setPct(4);
+    setStageMsg("Checking for an existing path…");
+
+    let res: Response;
     try {
-      const res = await fetch("/api/curriculum", {
+      res = await fetch("/api/curriculum", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -71,24 +83,64 @@ export default function OnboardingPage() {
           targetRole: targetRole.trim() || undefined,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        if (res.status === 429) {
-          toast.error(
-            data.message ||
-              "AI is busy right now — please try again in a minute."
-          );
-        } else {
-          toast.error("Something went wrong building your path. Try again.");
-        }
-        setLoading(false);
-        return;
-      }
-      router.push(`/prep?c=${data.curriculumId}`);
     } catch {
-      toast.error("Network error — please try again.");
-      setLoading(false);
+      return fail("Network error — please try again.");
     }
+
+    // Cache hit (or error) comes back as plain JSON.
+    if (!res.headers.get("content-type")?.includes("ndjson")) {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return fail(
+          data.message ||
+            (res.status === 429
+              ? "AI is busy right now — try again in a minute."
+              : "Something went wrong building your path. Try again.")
+        );
+      }
+      setPct(100);
+      setStageMsg("Ready");
+      router.push(`/prep?c=${data.curriculumId}`);
+      return;
+    }
+
+    // Cache miss: read the live progress stream (newline-delimited JSON).
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        let ev: {
+          stage?: string;
+          pct?: number;
+          curriculumId?: string;
+          error?: string;
+          message?: string;
+        };
+        try {
+          ev = JSON.parse(line);
+        } catch {
+          continue;
+        }
+        if (ev.error) {
+          return fail(ev.message || "Couldn't build your path. Try again.");
+        }
+        if (typeof ev.pct === "number") setPct(ev.pct);
+        if (ev.stage) setStageMsg(ev.stage);
+        if (ev.curriculumId) {
+          router.push(`/prep?c=${ev.curriculumId}`);
+          return;
+        }
+      }
+    }
+    // Stream ended without a terminal event.
+    fail("The connection dropped while building your path. Please try again.");
   }
 
   return (
@@ -178,16 +230,31 @@ export default function OnboardingPage() {
             />
           </section>
 
-          <Button
-            onClick={submit}
-            disabled={loading}
-            className="w-full"
-            size="lg"
-          >
-            {loading
-              ? "The agent is building your path… (~30s)"
-              : "Build my prep path"}
-          </Button>
+          {loading ? (
+            <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm font-medium">{stageMsg}…</span>
+                <span className="text-sm font-semibold tabular-nums">
+                  {pct}%
+                </span>
+              </div>
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Building your complete {effectiveStack || "stack"} path — levels,
+                modules, topics and interview drills. This runs once per stack,
+                then it&apos;s cached for everyone.
+              </p>
+            </div>
+          ) : (
+            <Button onClick={submit} className="w-full" size="lg">
+              Build my prep path
+            </Button>
+          )}
         </CardContent>
       </Card>
     </main>

@@ -23,9 +23,12 @@ export class RateLimitError extends Error {
 function modelFor(tier: Tier): string {
   // Rolling "-latest" aliases: stable pointers that won't get deprecated out
   // from under us (dated snapshots like gemini-2.5-flash are retired for new keys).
+  // Default both tiers to flash-lite — on the free tier the heavier flash model
+  // is frequently 503-overloaded. Override GEMINI_SMART_MODEL for higher quality
+  // once you have quota headroom.
   return tier === "turn"
     ? process.env.GEMINI_TURN_MODEL || "gemini-flash-lite-latest"
-    : process.env.GEMINI_SMART_MODEL || "gemini-flash-latest";
+    : process.env.GEMINI_SMART_MODEL || "gemini-flash-lite-latest";
 }
 
 function isMock() {
@@ -91,16 +94,19 @@ export async function generateText(opts: GenerateOptions): Promise<string> {
     },
   };
 
+  // Retry transient 503/overload a few times with exponential backoff — the
+  // free tier throws these intermittently. Rate limits (429) are NOT retried.
+  const MAX_RETRIES = 3;
   for (let attempt = 0; ; attempt++) {
     try {
       const res = await ai.models.generateContent(request);
       return res.text ?? "";
     } catch (err) {
-      if (attempt < 1 && isRetryable(err) && !isRateLimit(err)) {
-        await sleep(1500 * (attempt + 1));
+      if (isRateLimit(err)) throw new RateLimitError(30);
+      if (attempt < MAX_RETRIES && isRetryable(err)) {
+        await sleep(1200 * 2 ** attempt); // 1.2s, 2.4s, 4.8s
         continue;
       }
-      if (isRateLimit(err)) throw new RateLimitError(30);
       throw err;
     }
   }
@@ -123,17 +129,37 @@ export async function* streamText(
   }
 
   const ai = getClient();
+  const request = {
+    model: modelFor(opts.tier),
+    contents: opts.prompt,
+    config: {
+      ...(opts.system ? { systemInstruction: opts.system } : {}),
+      ...(opts.json ? { responseMimeType: "application/json" } : {}),
+      ...(opts.maxOutputTokens
+        ? { maxOutputTokens: opts.maxOutputTokens }
+        : {}),
+    },
+  };
+
+  // Retry opening the stream on transient 503/overload (before any bytes flow).
+  // Once chunks start arriving we can't safely restart, so only the open retries.
+  const MAX_RETRIES = 3;
+  let stream: Awaited<ReturnType<typeof ai.models.generateContentStream>>;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      stream = await ai.models.generateContentStream(request);
+      break;
+    } catch (err) {
+      if (isRateLimit(err)) throw new RateLimitError(30);
+      if (attempt < MAX_RETRIES && isRetryable(err)) {
+        await sleep(1200 * 2 ** attempt);
+        continue;
+      }
+      throw err;
+    }
+  }
+
   try {
-    const stream = await ai.models.generateContentStream({
-      model: modelFor(opts.tier),
-      contents: opts.prompt,
-      config: {
-        ...(opts.system ? { systemInstruction: opts.system } : {}),
-        ...(opts.maxOutputTokens
-          ? { maxOutputTokens: opts.maxOutputTokens }
-          : {}),
-      },
-    });
     for await (const chunk of stream) {
       const t = chunk.text;
       if (t) yield t;
@@ -153,5 +179,46 @@ export function parseJsonLoose(text: string): unknown {
     .trim()
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/\s*```$/, "");
-  return JSON.parse(trimmed);
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // Models sometimes append trailing text/tokens after a valid JSON value.
+    // Extract the first complete balanced object/array via a brace scan that
+    // respects string literals and escapes.
+    const extracted = extractFirstJson(trimmed);
+    if (extracted !== null) return JSON.parse(extracted);
+    throw new Error("No parseable JSON found in model output");
+  }
+}
+
+function extractFirstJson(s: string): string | null {
+  const startObj = s.indexOf("{");
+  const startArr = s.indexOf("[");
+  let start = -1;
+  if (startObj === -1) start = startArr;
+  else if (startArr === -1) start = startObj;
+  else start = Math.min(startObj, startArr);
+  if (start === -1) return null;
+
+  const open = s[start];
+  const close = open === "{" ? "}" : "]";
+  let depth = 0;
+  let inStr = false;
+  let escaped = false;
+  for (let i = start; i < s.length; i++) {
+    const ch = s[i];
+    if (inStr) {
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') inStr = true;
+    else if (ch === open) depth++;
+    else if (ch === close) {
+      depth--;
+      if (depth === 0) return s.slice(start, i + 1);
+    }
+  }
+  return null; // unbalanced — truncated output
 }

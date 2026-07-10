@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { generateText, parseJsonLoose, RateLimitError } from "@/lib/gemini";
+import { streamText, parseJsonLoose, RateLimitError } from "@/lib/gemini";
 import { consumeQuota, globalCheck } from "@/lib/quota";
 import { curriculumPrompt } from "@/lib/prompts/curriculum";
 import { CurriculumSchema } from "@/lib/schemas";
@@ -14,6 +14,35 @@ const EXPERIENCE_TO_LEVEL: Record<string, number> = {
   intermediate: 1,
   experienced: 2,
 };
+
+/** Rough size of a finished curriculum JSON — used to map bytes → % progress. */
+const TARGET_CHARS = 7000;
+
+type Supa = Awaited<ReturnType<typeof createClient>>;
+
+async function enroll(
+  supabase: Supa,
+  userId: string,
+  curriculumId: string,
+  experience: string,
+  targetRole: string | null
+) {
+  await supabase.from("user_track_progress").upsert(
+    {
+      user_id: userId,
+      curriculum_id: curriculumId,
+      current_level: EXPERIENCE_TO_LEVEL[experience] ?? 0,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,curriculum_id", ignoreDuplicates: true }
+  );
+  if (targetRole) {
+    await supabase
+      .from("profiles")
+      .update({ target_role: targetRole })
+      .eq("id", userId);
+  }
+}
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -38,101 +67,112 @@ export async function POST(request: Request) {
   const stackKey = slugify(stack);
   const admin = createAdminClient();
 
-  // 1. Global cache lookup — a curriculum is shared by every user of the stack.
-  let { data: curriculum } = await admin
+  // 1. Global cache hit → instant, no streaming needed.
+  const { data: cached } = await admin
     .from("curricula")
-    .select("id, stack_label")
+    .select("id")
     .eq("stack_key", stackKey)
     .maybeSingle();
-
-  // 2. Cache miss: generate once with the smart model.
-  if (!curriculum) {
-    const blockedScope = await consumeQuota(supabase, [globalCheck()]);
-    if (blockedScope) {
-      return NextResponse.json(
-        {
-          error: "quota",
-          message:
-            "The app's free daily AI budget is spent. Try again tomorrow — cached study paths remain available.",
-        },
-        { status: 429 }
-      );
-    }
-
-    let structure;
-    try {
-      const raw = await generateText({
-        tier: "smart",
-        prompt: curriculumPrompt(stack),
-        json: true,
-        mockKind: "curriculum",
-      });
-      structure = CurriculumSchema.parse(parseJsonLoose(raw));
-    } catch (err) {
-      if (err instanceof RateLimitError) {
-        return NextResponse.json(
-          { error: "rate_limit", retryAfter: err.retryAfterSeconds },
-          { status: 429 }
-        );
-      }
-      console.error("curriculum generation failed", err);
-      return NextResponse.json(
-        { error: "generation_failed" },
-        { status: 502 }
-      );
-    }
-
-    const { data: inserted, error: insertError } = await admin
-      .from("curricula")
-      .insert({
-        stack_key: stackKey,
-        stack_label: structure.stack_label || stack,
-        structure,
-      })
-      .select("id, stack_label")
-      .single();
-
-    if (insertError) {
-      // Unique-violation race: another request generated it first — reuse theirs.
-      const { data: existing } = await admin
-        .from("curricula")
-        .select("id, stack_label")
-        .eq("stack_key", stackKey)
-        .maybeSingle();
-      if (!existing) {
-        console.error("curriculum insert failed", insertError);
-        return NextResponse.json({ error: "db" }, { status: 500 });
-      }
-      curriculum = existing;
-    } else {
-      curriculum = inserted;
-    }
+  if (cached) {
+    await enroll(supabase, user.id, cached.id, experience, targetRole);
+    return NextResponse.json({ curriculumId: cached.id, cached: true });
   }
 
-  // 3. Enroll the user (idempotent) and store their target role.
-  const startLevel = EXPERIENCE_TO_LEVEL[experience] ?? 0;
-  const { error: progressError } = await supabase
-    .from("user_track_progress")
-    .upsert(
+  // 2. Cache miss → quota gate before we open the stream.
+  const blocked = await consumeQuota(supabase, [globalCheck()]);
+  if (blocked) {
+    return NextResponse.json(
       {
-        user_id: user.id,
-        curriculum_id: curriculum.id,
-        current_level: startLevel,
-        updated_at: new Date().toISOString(),
+        error: "quota",
+        message:
+          "The app's free daily AI budget is spent. Try again tomorrow — cached study paths remain available.",
       },
-      { onConflict: "user_id,curriculum_id", ignoreDuplicates: true }
+      { status: 429 }
     );
-  if (progressError) {
-    console.error("progress upsert failed", progressError);
-    return NextResponse.json({ error: "db" }, { status: 500 });
   }
 
-  if (targetRole) {
-    await supabase
-      .from("profiles")
-      .update({ target_role: targetRole })
-      .eq("id", user.id);
-  }
+  // 3. Stream generation progress as newline-delimited JSON events.
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (obj: Record<string, unknown>) =>
+        controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
 
-  return NextResponse.json({ curriculumId: curriculum.id });
+      try {
+        send({ stage: "Designing your curriculum", pct: 8 });
+
+        let full = "";
+        let lastPct = 8;
+        for await (const chunk of streamText({
+          tier: "smart",
+          prompt: curriculumPrompt(stack),
+          json: true,
+          mockKind: "curriculum",
+        })) {
+          full += chunk;
+          // Map accumulated length → 8..88%.
+          const pct = Math.min(88, 8 + Math.floor((full.length / TARGET_CHARS) * 80));
+          if (pct > lastPct) {
+            lastPct = pct;
+            send({ stage: "Writing your roadmap", pct });
+          }
+        }
+
+        send({ stage: "Structuring levels & topics", pct: 92 });
+        const structure = CurriculumSchema.parse(parseJsonLoose(full));
+
+        const { data: inserted, error: insertError } = await admin
+          .from("curricula")
+          .insert({
+            stack_key: stackKey,
+            stack_label: structure.stack_label || stack,
+            structure,
+          })
+          .select("id")
+          .single();
+
+        let curriculumId: string;
+        if (insertError) {
+          // Unique-violation race: reuse whoever won.
+          const { data: existing } = await admin
+            .from("curricula")
+            .select("id")
+            .eq("stack_key", stackKey)
+            .maybeSingle();
+          if (!existing) throw insertError;
+          curriculumId = existing.id;
+        } else {
+          curriculumId = inserted.id;
+        }
+
+        send({ stage: "Saving your path", pct: 97 });
+        await enroll(supabase, user.id, curriculumId, experience, targetRole);
+
+        send({ stage: "Ready", pct: 100, curriculumId });
+      } catch (err) {
+        if (err instanceof RateLimitError) {
+          send({
+            error: "rate_limit",
+            message: "AI is busy right now — try again in a minute.",
+          });
+        } else {
+          console.error("curriculum generation failed", err);
+          send({
+            error: "generation_failed",
+            message:
+              "Couldn't finish building your path (the AI service was momentarily unavailable). Please try again.",
+          });
+        }
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+    },
+  });
 }
