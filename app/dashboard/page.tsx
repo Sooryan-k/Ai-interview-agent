@@ -25,6 +25,8 @@ import {
   buildHeatmap,
   type EvalTurnRow,
 } from "@/lib/analytics";
+import { LevelPanel } from "@/components/dashboard/LevelPanel";
+import type { XpInputs } from "@/lib/xp";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -38,7 +40,7 @@ export default async function DashboardPage() {
       supabase
         .from("user_track_progress")
         .select(
-          "curriculum_id, topic_status, current_level, updated_at, curricula (stack_label, structure)"
+          "curriculum_id, topic_status, quiz_scores, current_level, updated_at, curricula (stack_label, structure)"
         )
         .eq("user_id", user.id)
         .order("updated_at", { ascending: false }),
@@ -96,6 +98,54 @@ export default async function DashboardPage() {
   const hasInsights =
     skills.length >= 3 || heatmap.rows.length > 0 || delivery.points.length >= 2;
 
+  // ---- XP inputs (derived from existing data; 2 extra count queries) ----
+  const completedInterviews = (interviews ?? []).filter((iv) => {
+    const rep = Array.isArray(iv.reports) ? iv.reports[0] : iv.reports;
+    return rep?.overall_score != null;
+  });
+  const scores = completedInterviews
+    .map((iv) => {
+      const rep = Array.isArray(iv.reports) ? iv.reports[0] : iv.reports;
+      return rep?.overall_score as number | undefined;
+    })
+    .filter((s): s is number => typeof s === "number");
+  const avgScore = scores.length
+    ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+    : null;
+
+  let topicsMastered = 0;
+  let quizzesPassed = 0;
+  for (const e of enrollments) {
+    const statusMap = (e.topic_status ?? {}) as Record<string, string>;
+    topicsMastered += Object.values(statusMap).filter((s) => s === "mastered").length;
+    const qs = (e.quiz_scores ?? {}) as Record<string, { pct: number }>;
+    quizzesPassed += Object.values(qs).filter((q) => q.pct >= 70).length;
+  }
+
+  const [{ count: cardsReviewed }, { count: storiesPolished }] =
+    await Promise.all([
+      supabase
+        .from("user_question_stats")
+        .select("question_id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .not("last_result", "is", null),
+      supabase
+        .from("stories")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .not("polished_md", "is", null),
+    ]);
+
+  const xpInputs: XpInputs = {
+    interviewsCompleted: completedInterviews.length,
+    avgScore,
+    topicsMastered,
+    quizzesPassed,
+    cardsReviewed: cardsReviewed ?? 0,
+    streak: streakAlive ? profile?.streak_count ?? 0 : 0,
+    storiesPolished: storiesPolished ?? 0,
+  };
+
   const paths = enrollments.map((e) => {
     const cur = Array.isArray(e.curricula) ? e.curricula[0] : e.curricula;
     const parsed = CurriculumSchema.safeParse(cur?.structure);
@@ -144,7 +194,10 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        <DailyDrill />
+        <div className="grid gap-4 md:grid-cols-2">
+          <DailyDrill />
+          <LevelPanel inputs={xpInputs} />
+        </div>
 
         {/* Insights — computed from data the app already collects, zero AI cost */}
         {hasInsights && (

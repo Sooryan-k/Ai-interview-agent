@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/prep", label: "Prep Path" },
-  { href: "/prep/bank", label: "Question Bank" },
+  { href: "/prep", label: "Prep" },
   { href: "/practice", label: "Practice" },
-  { href: "/interview/new", label: "Mock Interview" },
+  { href: "/stories", label: "Stories" },
+  { href: "/interview/new", label: "Interview" },
 ];
 
 export function AppNav() {
@@ -47,9 +47,25 @@ export function AppNav() {
             ))}
           </nav>
         </div>
-        <Button variant="ghost" size="sm" onClick={signOut}>
-          Sign out
-        </Button>
+        <div className="flex items-center gap-1">
+          <Link
+            href="/prep/bank"
+            className="hidden rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
+            title="Question bank"
+          >
+            Bank
+          </Link>
+          <Link
+            href="/settings"
+            className="rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            title="Settings"
+          >
+            ⚙
+          </Link>
+          <Button variant="ghost" size="sm" onClick={signOut}>
+            Sign out
+          </Button>
+        </div>
       </div>
     </header>
   );

@@ -15,7 +15,9 @@ Sign in, pick your stack, and the agent prepares **everything** for your intervi
 ### 1. Supabase (free)
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. In the SQL editor, run the contents of [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
+2. In the SQL editor, run **each** migration in order:
+   [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), then
+   [`supabase/migrations/0002_stories.sql`](supabase/migrations/0002_stories.sql).
 3. Auth → Providers: enable **Email** (magic link works out of the box). Optionally enable **Google** (add OAuth credentials).
 4. Auth → URL Configuration: add `http://localhost:3000/**` (and your Vercel URL later) to redirect URLs.
 5. Project Settings → API: copy the URL, `anon` key, and `service_role` key.

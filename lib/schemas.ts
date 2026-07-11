@@ -106,6 +106,23 @@ export const BankSeedSchema = z.object({
 });
 export type BankSeed = z.infer<typeof BankSeedSchema>;
 
+// ---------- Resume structuring (profiles.resume_struct) ----------
+export const ResumeStructSchema = z.object({
+  summary: z.string().catch(""),
+  years_experience: z.number().catch(0),
+  skills: z.array(z.string()).catch([]),
+  highlights: z.array(z.string()).catch([]),
+  gaps: z.array(z.string()).catch([]),
+});
+export type ResumeStruct = z.infer<typeof ResumeStructSchema>;
+
+// ---------- Roast (fun, shareable) ----------
+export const RoastSchema = z.object({
+  roast_md: z.string(),
+  fixes: z.array(z.string()).catch([]),
+});
+export type Roast = z.infer<typeof RoastSchema>;
+
 // ---------- Wire protocol constants ----------
 export const EVAL_SENTINEL = "<<<EVAL>>>";
 export const END_MARKER = "[END_OF_INTERVIEW]";
