@@ -14,7 +14,8 @@ function cellClass(score: number | null): string {
 export function WeaknessHeatmap({ data }: { data: HeatmapData }) {
   if (data.rows.length === 0 || data.interviews.length === 0) return null;
   return (
-    <div className="space-y-1.5">
+    <div className="overflow-x-auto">
+      <div className="min-w-max space-y-1.5 pr-2">
       {/* header row: interview numbers */}
       <div className="flex items-center gap-1.5">
         <span className="w-32 shrink-0 sm:w-40" />
@@ -48,10 +49,11 @@ export function WeaknessHeatmap({ data }: { data: HeatmapData }) {
           </span>
         </div>
       ))}
-      <p className="pt-1 text-[11px] text-muted-foreground">
-        Rows = skills from your answer evaluations (weakest first) · columns =
-        recent interviews.
-      </p>
+        <p className="pt-1 text-[11px] text-muted-foreground">
+          Rows = skills from your answer evaluations (weakest first) · columns =
+          recent interviews.
+        </p>
+      </div>
     </div>
   );
 }

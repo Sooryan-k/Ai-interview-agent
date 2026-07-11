@@ -14,7 +14,9 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { CurriculumSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
+import { Flame, Mic, Target, TrendingDown } from "lucide-react";
 import { utcDay } from "@/lib/streak";
+import { PageShell } from "@/components/PageShell";
 import { DailyDrill } from "@/components/dashboard/DailyDrill";
 import { SkillRadar } from "@/components/dashboard/SkillRadar";
 import { WeaknessHeatmap } from "@/components/dashboard/WeaknessHeatmap";
@@ -171,28 +173,26 @@ export default async function DashboardPage() {
   return (
     <>
       <AppNav />
-      <main className="mx-auto w-full max-w-4xl space-y-8 px-6 py-10">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Hey{profile?.display_name ? ` ${profile.display_name}` : ""} 👋
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Pick up where you left off, or start a new round.
-            </p>
-          </div>
-          {streakAlive && (profile?.streak_count ?? 0) > 0 && (
+      <PageShell
+        maxWidth="wide"
+        className="space-y-8"
+        title={`Hey${profile?.display_name ? ` ${profile.display_name}` : ""} 👋`}
+        description="Pick up where you left off, or start a new round."
+        actions={
+          streakAlive && (profile?.streak_count ?? 0) > 0 ? (
             <div
               className="flex items-center gap-1.5 rounded-full border bg-orange-500/10 px-3 py-1.5 text-sm font-semibold text-orange-600 dark:text-orange-400"
               title="Days in a row you've studied, drilled or interviewed"
             >
-              🔥 {profile!.streak_count}
+              <Flame className="size-4" />
+              {profile!.streak_count}
               <span className="hidden font-normal text-muted-foreground sm:inline">
                 day streak
               </span>
             </div>
-          )}
-        </div>
+          ) : undefined
+        }
+      >
 
         <div className="grid gap-4 md:grid-cols-2">
           <DailyDrill />
@@ -207,7 +207,9 @@ export default async function DashboardPage() {
               {skills.length >= 3 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">🎯 Skill radar</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Target className="size-4 text-primary" /> Skill radar
+                    </CardTitle>
                     <CardDescription>
                       Average answer score per skill across your interviews
                     </CardDescription>
@@ -220,7 +222,9 @@ export default async function DashboardPage() {
               {heatmap.rows.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">🧊 Weak spots</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <TrendingDown className="size-4 text-primary" /> Weak spots
+                    </CardTitle>
                     <CardDescription>
                       Where to focus next — weakest skills first
                     </CardDescription>
@@ -233,8 +237,8 @@ export default async function DashboardPage() {
               {delivery.points.length >= 2 && (
                 <Card className="lg:col-span-2">
                   <CardHeader>
-                    <CardTitle className="text-base">
-                      🎙 Delivery coaching
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Mic className="size-4 text-primary" /> Delivery coaching
                     </CardTitle>
                     <CardDescription>
                       {delivery.insight ??
@@ -354,7 +358,7 @@ export default async function DashboardPage() {
             </div>
           )}
         </section>
-      </main>
+      </PageShell>
     </>
   );
 }

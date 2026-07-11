@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Check, Flame, X, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,7 +70,9 @@ export function DailyDrill() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">☀️ Daily drill</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Zap className="size-4 text-primary" /> Daily drill
+          </CardTitle>
           <CardDescription>
             The question bank is still filling up.{" "}
             <Link href="/prep/bank" className="underline underline-offset-2">
@@ -86,8 +89,8 @@ export function DailyDrill() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">
-            ☀️ Daily drill{" "}
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Zap className="size-4 text-primary" /> Daily drill{" "}
             {kind === "review" && (
               <Badge variant="secondary" className="ml-1 align-middle">
                 review
@@ -110,7 +113,7 @@ export function DailyDrill() {
             <p className="font-medium">
               Nice — logged.{" "}
               {streak != null && (
-                <span className="text-orange-500">🔥 {streak}-day streak</span>
+                <span className="inline-flex items-center gap-1 text-orange-500"><Flame className="size-3.5" /> {streak}-day streak</span>
               )}
             </p>
             {nextInDays != null && (
@@ -140,14 +143,14 @@ export function DailyDrill() {
                 </ul>
                 <div className="flex gap-2 pt-1">
                   <Button size="sm" onClick={() => grade("got_it")}>
-                    ✅ I got it
+                    <Check data-icon="inline-start" /> I got it
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => grade("missed")}
                   >
-                    ❌ Missed it
+                    <X data-icon="inline-start" /> Missed it
                   </Button>
                 </div>
               </>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -51,7 +52,7 @@ export function NotificationToggle() {
   }
   return (
     <Button size="sm" variant="outline" onClick={enable}>
-      🔔 Enable daily reminders
+      <Bell data-icon="inline-start" /> Enable daily reminders
     </Button>
   );
 }

@@ -144,7 +144,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-6 py-12">
+    <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Set up your prep path</CardTitle>
@@ -156,7 +156,7 @@ export default function OnboardingPage() {
         <CardContent className="space-y-8">
           <section className="space-y-3">
             <Label className="text-base">1. Choose your stack</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {STACK_PRESETS.map((p) => (
                 <button
                   key={p}

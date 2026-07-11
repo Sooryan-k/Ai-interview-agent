@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -152,7 +153,13 @@ export function ResumeUpload({
               onClick={doRoast}
               disabled={roasting}
             >
-              {roasting ? "Roasting…" : "🔥 Roast my resume"}
+              {roasting ? (
+                "Roasting…"
+              ) : (
+                <>
+                  <Flame data-icon="inline-start" /> Roast my resume
+                </>
+              )}
             </Button>
           )}
         </div>

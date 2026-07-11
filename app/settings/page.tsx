@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { CalendarDays } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
+import { PageShell } from "@/components/PageShell";
 import { DisplayNameForm } from "@/components/settings/DisplayNameForm";
 import { ResumeUpload } from "@/components/settings/ResumeUpload";
 import { NotificationToggle } from "@/components/settings/NotificationToggle";
@@ -32,13 +34,12 @@ export default async function SettingsPage() {
   return (
     <>
       <AppNav />
-      <main className="mx-auto w-full max-w-2xl space-y-6 px-6 py-10">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Personalize your prep and export a study plan.
-          </p>
-        </div>
+      <PageShell
+        maxWidth="narrow"
+        className="space-y-6"
+        title="Settings"
+        description="Personalize your prep and export a study plan."
+      >
 
         <DisplayNameForm initial={profile?.display_name ?? ""} />
 
@@ -61,7 +62,8 @@ export default async function SettingsPage() {
               variant="outline"
               render={
                 <a href="/api/study-plan?days=14" download>
-                  📅 Download 2-week study plan
+                  <CalendarDays data-icon="inline-start" /> Download 2-week study
+                  plan
                 </a>
               }
             />
@@ -91,7 +93,7 @@ export default async function SettingsPage() {
             </CardDescription>
           </CardHeader>
         </Card>
-      </main>
+      </PageShell>
     </>
   );
 }
