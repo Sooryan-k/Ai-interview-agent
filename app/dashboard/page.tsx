@@ -14,6 +14,17 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { CurriculumSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
+import { utcDay } from "@/lib/streak";
+import { DailyDrill } from "@/components/dashboard/DailyDrill";
+import { SkillRadar } from "@/components/dashboard/SkillRadar";
+import { WeaknessHeatmap } from "@/components/dashboard/WeaknessHeatmap";
+import { DeliveryTrends } from "@/components/dashboard/DeliveryTrends";
+import {
+  aggregateSkills,
+  aggregateDelivery,
+  buildHeatmap,
+  type EvalTurnRow,
+} from "@/lib/analytics";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -41,12 +52,49 @@ export default async function DashboardPage() {
         .limit(10),
       supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, streak_count, last_active_date")
         .eq("id", user.id)
         .maybeSingle(),
     ]);
 
   if (!enrollments || enrollments.length === 0) redirect("/onboarding");
+
+  // Show the flame only while the streak is alive (active today or yesterday).
+  const today = utcDay();
+  const yesterday = utcDay(new Date(Date.now() - 86_400_000));
+  const streakAlive =
+    profile?.last_active_date === today ||
+    profile?.last_active_date === yesterday;
+
+  // Insights from data already collected (evals + speech metrics) — zero AI cost.
+  const interviewMeta = (interviews ?? []).map((iv) => ({
+    id: iv.id,
+    started_at: iv.started_at,
+    role_track: iv.role_track,
+  }));
+  let skills: ReturnType<typeof aggregateSkills> = [];
+  let heatmap: ReturnType<typeof buildHeatmap> = { interviews: [], rows: [] };
+  let delivery: ReturnType<typeof aggregateDelivery> = {
+    points: [],
+    insight: null,
+  };
+  if (interviewMeta.length > 0) {
+    const { data: evalTurns } = await supabase
+      .from("turns")
+      .select("interview_id, eval, speech_metrics, created_at")
+      .in(
+        "interview_id",
+        interviewMeta.map((iv) => iv.id)
+      )
+      .eq("speaker", "user")
+      .not("eval", "is", null);
+    const rows = (evalTurns ?? []) as EvalTurnRow[];
+    skills = aggregateSkills(rows);
+    heatmap = buildHeatmap(rows, interviewMeta);
+    delivery = aggregateDelivery(rows, interviewMeta);
+  }
+  const hasInsights =
+    skills.length >= 3 || heatmap.rows.length > 0 || delivery.points.length >= 2;
 
   const paths = enrollments.map((e) => {
     const cur = Array.isArray(e.curricula) ? e.curricula[0] : e.curricula;
@@ -74,14 +122,80 @@ export default async function DashboardPage() {
     <>
       <AppNav />
       <main className="mx-auto w-full max-w-4xl space-y-8 px-6 py-10">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Hey{profile?.display_name ? ` ${profile.display_name}` : ""} 👋
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pick up where you left off, or start a new round.
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Hey{profile?.display_name ? ` ${profile.display_name}` : ""} 👋
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Pick up where you left off, or start a new round.
+            </p>
+          </div>
+          {streakAlive && (profile?.streak_count ?? 0) > 0 && (
+            <div
+              className="flex items-center gap-1.5 rounded-full border bg-orange-500/10 px-3 py-1.5 text-sm font-semibold text-orange-600 dark:text-orange-400"
+              title="Days in a row you've studied, drilled or interviewed"
+            >
+              🔥 {profile!.streak_count}
+              <span className="hidden font-normal text-muted-foreground sm:inline">
+                day streak
+              </span>
+            </div>
+          )}
         </div>
+
+        <DailyDrill />
+
+        {/* Insights — computed from data the app already collects, zero AI cost */}
+        {hasInsights && (
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold">Your insights</h2>
+            <div className="grid gap-4 lg:grid-cols-2">
+              {skills.length >= 3 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">🎯 Skill radar</CardTitle>
+                    <CardDescription>
+                      Average answer score per skill across your interviews
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <SkillRadar data={skills} />
+                  </CardContent>
+                </Card>
+              )}
+              {heatmap.rows.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">🧊 Weak spots</CardTitle>
+                    <CardDescription>
+                      Where to focus next — weakest skills first
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <WeaknessHeatmap data={heatmap} />
+                  </CardContent>
+                </Card>
+              )}
+              {delivery.points.length >= 2 && (
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle className="text-base">
+                      🎙 Delivery coaching
+                    </CardTitle>
+                    <CardDescription>
+                      {delivery.insight ??
+                        "How your speaking delivery is trending across voice interviews"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DeliveryTrends points={delivery.points} />
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Prep paths */}
         <section className="space-y-3">

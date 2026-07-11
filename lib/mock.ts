@@ -5,7 +5,14 @@ import { EVAL_SENTINEL, END_MARKER } from "@/lib/schemas";
  * developed and demoed with zero Gemini quota (and no API key at all).
  */
 
-export type MockKind = "curriculum" | "study" | "turn" | "report" | "knowledge";
+export type MockKind =
+  | "curriculum"
+  | "study"
+  | "turn"
+  | "report"
+  | "knowledge"
+  | "quiz"
+  | "bank";
 
 const mockCurriculum = {
   stack_label: "React + Node.js",
@@ -222,6 +229,85 @@ const mockKnowledge = {
   ],
 };
 
+const mockQuiz = {
+  questions: [
+    {
+      type: "mcq",
+      q: "Which statement about `const` is TRUE?",
+      options: [
+        "It makes objects immutable",
+        "It prevents rebinding the variable",
+        "It is function-scoped",
+        "It hoists with value undefined",
+      ],
+      answer: 1,
+      explanation:
+        "const prevents reassignment of the binding; object contents can still mutate.",
+    },
+    {
+      type: "mcq",
+      q: "Promise callbacks run as…",
+      options: ["macrotasks", "microtasks", "synchronously", "render tasks"],
+      answer: 1,
+      explanation:
+        "Promise reactions are microtasks and drain before the next macrotask.",
+    },
+    {
+      type: "short",
+      q: "In one sentence, what is a closure?",
+      ideal_points: [
+        "A function that retains access to its defining scope",
+        "Variables persist after the outer function returns",
+      ],
+      explanation:
+        "A closure is a function bundled with its lexical environment.",
+    },
+    {
+      type: "mcq",
+      q: "What does the temporal dead zone apply to?",
+      options: ["var only", "let/const before declaration", "globals", "imports only"],
+      answer: 1,
+      explanation:
+        "Accessing let/const before the declaration line throws a ReferenceError.",
+    },
+  ],
+};
+
+const mockBank = {
+  questions: [
+    {
+      question: "Explain the difference between == and === in JavaScript.",
+      ideal_points: ["Type coercion rules", "Strict equality compares type and value"],
+      tags: ["javascript", "fundamentals"],
+    },
+    {
+      question: "How does React decide when to re-render a component?",
+      ideal_points: ["State/props changes", "Reference equality", "Memoization"],
+      tags: ["react", "rendering"],
+    },
+    {
+      question: "Describe how you would paginate a REST API and why.",
+      ideal_points: ["Cursor vs offset", "Stable ordering", "Page size limits"],
+      tags: ["api-design", "backend"],
+    },
+    {
+      question: "What happens from typing a URL to the page rendering?",
+      ideal_points: ["DNS", "TCP/TLS", "HTTP", "Parse/render pipeline"],
+      tags: ["web", "fundamentals"],
+    },
+    {
+      question: "When would you choose WebSockets over HTTP polling?",
+      ideal_points: ["Bidirectional low-latency", "Connection overhead trade-offs"],
+      tags: ["networking", "realtime"],
+    },
+    {
+      question: "Explain optimistic UI updates and their failure handling.",
+      ideal_points: ["Immediate feedback", "Rollback on error", "Reconciliation"],
+      tags: ["frontend", "ux"],
+    },
+  ],
+};
+
 /** Scripted interviewer turns so a full mock interview can be run offline. */
 function mockTurn(turnIdx: number): string {
   const turns = [
@@ -244,6 +330,10 @@ export function mockResponse(kind: MockKind, turnIdx = 0): string {
       return JSON.stringify(mockReport);
     case "knowledge":
       return JSON.stringify(mockKnowledge);
+    case "quiz":
+      return JSON.stringify(mockQuiz);
+    case "bank":
+      return JSON.stringify(mockBank);
     case "turn":
       return mockTurn(turnIdx);
   }

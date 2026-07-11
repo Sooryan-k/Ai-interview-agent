@@ -19,16 +19,20 @@ const STATUS_DOT: Record<string, string> = {
   mastered: "bg-emerald-500",
 };
 
+type QuizScoreMap = Record<string, { pct: number }>;
+
 export function Roadmap({
   curriculumId,
   structure,
   topicStatus,
   currentLevel,
+  quizScores = {},
 }: {
   curriculumId: string;
   structure: Curriculum;
   topicStatus: TopicStatusMap;
   currentLevel: number;
+  quizScores?: QuizScoreMap;
 }) {
   return (
     <Accordion
@@ -77,9 +81,30 @@ export function Roadmap({
             <AccordionContent className="space-y-4 pb-4">
               {level.modules.map((mod) => (
                 <div key={mod.key}>
-                  <h4 className="mb-2 text-sm font-medium text-muted-foreground">
-                    {mod.title}
-                  </h4>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      {mod.title}
+                    </h4>
+                    <Link
+                      href={`/prep/quiz/${mod.key}?c=${curriculumId}`}
+                      className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                      {quizScores[mod.key] ? (
+                        <Badge
+                          variant={
+                            quizScores[mod.key].pct >= 80
+                              ? "default"
+                              : "secondary"
+                          }
+                          className="tabular-nums"
+                        >
+                          quiz {quizScores[mod.key].pct}%
+                        </Badge>
+                      ) : (
+                        <>📝 Checkpoint quiz</>
+                      )}
+                    </Link>
+                  </div>
                   <ul className="space-y-1">
                     {mod.topics.map((topic) => {
                       const status = topicStatus[topic.key] ?? "todo";

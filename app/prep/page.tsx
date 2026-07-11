@@ -21,7 +21,7 @@ export default async function PrepPage({
   const { data: enrollments } = await supabase
     .from("user_track_progress")
     .select(
-      "curriculum_id, topic_status, current_level, curricula (id, stack_label, structure)"
+      "curriculum_id, topic_status, quiz_scores, current_level, curricula (id, stack_label, structure)"
     )
     .eq("user_id", user.id)
     .order("updated_at", { ascending: false });
@@ -102,6 +102,9 @@ export default async function PrepPage({
           structure={structure}
           topicStatus={statusMap}
           currentLevel={selected.current_level ?? 0}
+          quizScores={
+            (selected.quiz_scores ?? {}) as Record<string, { pct: number }>
+          }
         />
       </main>
     </>

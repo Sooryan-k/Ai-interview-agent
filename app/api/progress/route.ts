@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { touchStreak } from "@/lib/streak";
 
 const VALID_STATUS = new Set(["todo", "learning", "mastered"]);
 
@@ -52,5 +53,8 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: "db" }, { status: 500 });
   }
+
+  await touchStreak(supabase, user.id); // studying counts toward the streak
+
   return NextResponse.json({ ok: true });
 }

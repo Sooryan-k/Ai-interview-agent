@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/prep", label: "Prep Path" },
+  { href: "/prep/bank", label: "Question Bank" },
   { href: "/interview/new", label: "Mock Interview" },
 ];
 

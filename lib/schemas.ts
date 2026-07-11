@@ -65,6 +65,47 @@ export const ReportSchema = z.object({
 });
 export type Report = z.infer<typeof ReportSchema>;
 
+// ---------- Module quiz (global cache in `quizzes` table) ----------
+export const QuizMcqSchema = z.object({
+  type: z.literal("mcq"),
+  q: z.string(),
+  options: z.array(z.string()).min(2).max(6),
+  answer: z.number().int().min(0), // index into options
+  explanation: z.string().catch(""),
+});
+
+export const QuizShortSchema = z.object({
+  type: z.literal("short"),
+  q: z.string(),
+  ideal_points: z.array(z.string()).min(1),
+  explanation: z.string().catch(""),
+});
+
+export const QuizQuestionSchema = z.discriminatedUnion("type", [
+  QuizMcqSchema,
+  QuizShortSchema,
+]);
+
+export const QuizSchema = z.object({
+  questions: z.array(QuizQuestionSchema).min(3),
+});
+export type Quiz = z.infer<typeof QuizSchema>;
+export type QuizQuestion = z.infer<typeof QuizQuestionSchema>;
+
+// ---------- Question bank seeding (global cache in `question_bank`) ----------
+export const BankSeedSchema = z.object({
+  questions: z
+    .array(
+      z.object({
+        question: z.string(),
+        ideal_points: z.array(z.string()).catch([]),
+        tags: z.array(z.string()).catch([]),
+      })
+    )
+    .min(5),
+});
+export type BankSeed = z.infer<typeof BankSeedSchema>;
+
 // ---------- Wire protocol constants ----------
 export const EVAL_SENTINEL = "<<<EVAL>>>";
 export const END_MARKER = "[END_OF_INTERVIEW]";

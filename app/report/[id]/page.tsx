@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { ReportActions } from "@/components/report/ReportActions";
 
 interface PerQuestion {
   q: string;
@@ -47,7 +48,7 @@ export default async function ReportPage({
   const { data: report } = await supabase
     .from("reports")
     .select(
-      "overall_score, strengths, weaknesses, per_question, recommendations, created_at"
+      "overall_score, strengths, weaknesses, per_question, recommendations, share_slug, created_at"
     )
     .eq("interview_id", id)
     .maybeSingle();
@@ -112,6 +113,11 @@ export default async function ReportPage({
             <p className="text-xs text-muted-foreground">overall / 100</p>
           </div>
         </div>
+
+        <ReportActions
+          interviewId={id}
+          initialSlug={(report.share_slug as string | null) ?? null}
+        />
 
         {/* Strengths & weaknesses */}
         <div className="grid gap-4 sm:grid-cols-2">

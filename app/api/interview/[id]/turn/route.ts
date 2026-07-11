@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { streamText, RateLimitError } from "@/lib/gemini";
 import { consumeQuota, globalCheck } from "@/lib/quota";
+import { touchStreak } from "@/lib/streak";
 import {
   interviewerSystemPrompt,
   transcriptPrompt,
@@ -101,6 +102,7 @@ export async function POST(
       // Unique violation => double submit; reject.
       return NextResponse.json({ error: "duplicate turn" }, { status: 409 });
     }
+    await touchStreak(supabase, user.id); // interviewing counts toward the streak
   }
 
   // Compose prompt context (all free DB lookups).
