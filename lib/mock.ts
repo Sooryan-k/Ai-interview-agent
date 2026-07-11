@@ -15,7 +15,8 @@ export type MockKind =
   | "bank"
   | "polish"
   | "roast"
-  | "resume";
+  | "resume"
+  | "whiteboard";
 
 const mockCurriculum = {
   stack_label: "React + Node.js",
@@ -336,6 +337,30 @@ const mockResume = {
   gaps: ["system design at scale", "kubernetes"],
 };
 
+const mockWhiteboard = {
+  overall_score: 68,
+  components_identified: ["client", "API server", "database"],
+  strengths: [
+    "Clear request flow from client to API to database",
+    "Separated the API tier from the data tier",
+  ],
+  bottlenecks: [
+    "Single database with no replica — a read bottleneck and a single point of failure",
+    "No load balancer in front of the API tier",
+  ],
+  missing_pieces: [
+    "A cache (e.g. Redis) for hot reads",
+    "A load balancer and horizontal API scaling",
+    "A CDN for static assets",
+  ],
+  follow_up_questions: [
+    "How would you scale reads as traffic grows 10x?",
+    "What happens when the database goes down?",
+  ],
+  verdict:
+    "A solid baseline design that would pass a junior screen but needs caching and redundancy for a senior bar.",
+};
+
 /** Scripted interviewer turns so a full mock interview can be run offline. */
 function mockTurn(turnIdx: number): string {
   const turns = [
@@ -368,6 +393,8 @@ export function mockResponse(kind: MockKind, turnIdx = 0): string {
       return JSON.stringify(mockRoast);
     case "resume":
       return JSON.stringify(mockResume);
+    case "whiteboard":
+      return JSON.stringify(mockWhiteboard);
     case "turn":
       return mockTurn(turnIdx);
   }

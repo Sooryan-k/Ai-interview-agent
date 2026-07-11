@@ -68,6 +68,8 @@ export interface GenerateOptions {
   prompt: string;
   json?: boolean;
   maxOutputTokens?: number;
+  /** Optional image input (base64, no data: prefix) for vision prompts. */
+  image?: { data: string; mimeType: string };
   /** Which canned fixture to return in mock mode. */
   mockKind: MockKind;
   /** For 'turn' fixtures: index of the AI turn being generated. */
@@ -82,9 +84,25 @@ export async function generateText(opts: GenerateOptions): Promise<string> {
   if (isMock()) return mockResponse(opts.mockKind, opts.mockTurnIdx ?? 0);
 
   const ai = getClient();
+  const contents = opts.image
+    ? [
+        {
+          role: "user",
+          parts: [
+            { text: opts.prompt },
+            {
+              inlineData: {
+                mimeType: opts.image.mimeType,
+                data: opts.image.data,
+              },
+            },
+          ],
+        },
+      ]
+    : opts.prompt;
   const request = {
     model: modelFor(opts.tier),
-    contents: opts.prompt,
+    contents,
     config: {
       ...(opts.system ? { systemInstruction: opts.system } : {}),
       ...(opts.json ? { responseMimeType: "application/json" } : {}),

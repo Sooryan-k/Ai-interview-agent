@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/AppNav";
@@ -51,13 +52,35 @@ export default async function NewInterviewPage({
   return (
     <>
       <AppNav />
-      <main className="mx-auto w-full max-w-2xl px-6 py-10">
+      <main className="mx-auto w-full max-w-2xl space-y-4 px-6 py-10">
         <NewInterviewForm
           defaultRoleTrack={defaultRoleTrack}
           curriculumId={curriculumId}
           level={level}
           levelTitle={levelTitle}
         />
+
+        {/* Special rounds */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Link
+            href="/interview/whiteboard"
+            className="rounded-lg border p-4 transition-colors hover:bg-accent"
+          >
+            <p className="text-sm font-medium">📐 Whiteboard round</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Draw a system design; AI grades your actual diagram.
+            </p>
+          </Link>
+          <Link
+            href="/interview/coding"
+            className="rounded-lg border p-4 transition-colors hover:bg-accent"
+          >
+            <p className="text-sm font-medium">💻 Coding round</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Solve in a real editor, run tests, get an AI code review.
+            </p>
+          </Link>
+        </div>
       </main>
     </>
   );

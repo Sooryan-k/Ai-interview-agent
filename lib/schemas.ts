@@ -123,6 +123,18 @@ export const RoastSchema = z.object({
 });
 export type Roast = z.infer<typeof RoastSchema>;
 
+// ---------- Whiteboard (system-design diagram critique via vision) ----------
+export const WhiteboardCritiqueSchema = z.object({
+  overall_score: z.number().min(0).max(100),
+  components_identified: z.array(z.string()).catch([]),
+  strengths: z.array(z.string()).catch([]),
+  bottlenecks: z.array(z.string()).catch([]),
+  missing_pieces: z.array(z.string()).catch([]),
+  follow_up_questions: z.array(z.string()).catch([]),
+  verdict: z.string().catch(""),
+});
+export type WhiteboardCritique = z.infer<typeof WhiteboardCritiqueSchema>;
+
 // ---------- Wire protocol constants ----------
 export const EVAL_SENTINEL = "<<<EVAL>>>";
 export const END_MARKER = "[END_OF_INTERVIEW]";
