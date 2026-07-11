@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/AppNav";
 import { BankSeeder } from "@/components/prep/BankSeeder";
+import { AddToPractice } from "@/components/prep/AddToPractice";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -164,6 +165,9 @@ export default async function BankPage({
                       <li key={j}>{p}</li>
                     ))}
                   </ul>
+                  <div className="mt-3">
+                    <AddToPractice questionId={q.id} />
+                  </div>
                 </div>
               </details>
             ))}

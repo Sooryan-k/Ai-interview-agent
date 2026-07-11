@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { touchStreak, utcDay } from "@/lib/streak";
+import { reviewCard } from "@/lib/sm2";
 
 /**
  * Daily drill — question of the day. Zero Gemini calls.
@@ -89,23 +90,19 @@ export async function POST(request: Request) {
     .eq("question_id", questionId)
     .maybeSingle();
 
-  // Simple scheduling (Wave 2 replaces this with full SM-2):
-  // got_it → interval doubles (min 3 days); missed → back to tomorrow, lapse++.
-  const prevInterval = existing?.interval_days ?? 0;
-  const intervalDays =
-    result === "got_it" ? Math.max(3, prevInterval * 2 || 3) : 1;
-  const dueAt = new Date(Date.now() + intervalDays * 86_400_000).toISOString();
+  // Map the drill's binary self-grade to an SM-2 quality score.
+  const quality = result === "got_it" ? 4 : 2;
+  const update = reviewCard(
+    {
+      ease: existing?.ease ?? 2.5,
+      interval_days: existing?.interval_days ?? 0,
+      lapses: existing?.lapses ?? 0,
+    },
+    quality
+  );
 
   const { error } = await supabase.from("user_question_stats").upsert(
-    {
-      user_id: user.id,
-      question_id: questionId,
-      interval_days: intervalDays,
-      due_at: dueAt,
-      lapses: (existing?.lapses ?? 0) + (result === "missed" ? 1 : 0),
-      last_result: result,
-      ease: existing?.ease ?? 2.5,
-    },
+    { user_id: user.id, question_id: questionId, ...update },
     { onConflict: "user_id,question_id" }
   );
   if (error) {
@@ -114,5 +111,9 @@ export async function POST(request: Request) {
   }
 
   const streak = await touchStreak(supabase, user.id);
-  return NextResponse.json({ ok: true, streak, nextInDays: intervalDays });
+  return NextResponse.json({
+    ok: true,
+    streak,
+    nextInDays: update.interval_days,
+  });
 }
