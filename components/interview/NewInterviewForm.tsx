@@ -29,6 +29,7 @@ const ROUNDS = [
   { value: "system_design", label: "System design" },
   { value: "dsa", label: "DSA (verbal, no coding)" },
   { value: "hr", label: "HR screen" },
+  { value: "negotiation", label: "💰 Salary negotiation sim" },
 ];
 
 export function NewInterviewForm({
@@ -48,6 +49,7 @@ export function NewInterviewForm({
   const [difficulty, setDifficulty] = useState("medium");
   const [jdText, setJdText] = useState("");
   const [barRaiser, setBarRaiser] = useState(false);
+  const [panel, setPanel] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function start() {
@@ -68,6 +70,7 @@ export function NewInterviewForm({
           level,
           jdText: jdText.trim() || undefined,
           barRaiser,
+          panel,
         }),
       });
       const data = await res.json();
@@ -179,6 +182,29 @@ export function NewInterviewForm({
             <span className="block text-xs text-muted-foreground">
               A relentlessly demanding interviewer who probes for depth and
               scores strictly. Turn it on when you want the hard version.
+            </span>
+          </span>
+        </label>
+
+        <label
+          className={cn(
+            "flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors hover:bg-accent",
+            panel && "border-primary bg-accent"
+          )}
+        >
+          <input
+            type="checkbox"
+            checked={panel}
+            onChange={(e) => setPanel(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            <span className="block text-sm font-medium">
+              👥 Panel interview
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              Face three interviewers with different personalities — an
+              engineering manager, a senior engineer, and a bar raiser.
             </span>
           </span>
         </label>

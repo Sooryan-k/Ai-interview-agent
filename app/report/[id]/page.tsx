@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { ReportActions } from "@/components/report/ReportActions";
+import { TranscriptReplay } from "@/components/report/TranscriptReplay";
 
 interface PerQuestion {
   q: string;
@@ -246,10 +247,17 @@ export default async function ReportPage({
         </Card>
 
         {/* Transcript replay */}
+        {turns && turns.length > 0 && (
+          <div className="print-hidden flex justify-end">
+            <TranscriptReplay
+              turns={turns.map((t) => ({ speaker: t.speaker, text: t.text }))}
+            />
+          </div>
+        )}
         <Accordion multiple={false}>
           <AccordionItem value="transcript" className="rounded-lg border px-4">
             <AccordionTrigger className="text-sm font-medium hover:no-underline">
-              Replay full transcript
+              Read full transcript
             </AccordionTrigger>
             <AccordionContent className="space-y-3 pb-4">
               {(turns ?? []).map((t, i) => (

@@ -58,10 +58,12 @@ export function InterviewRoom({
   const [countdown, setCountdown] = useState(0);
   const [finishing, setFinishing] = useState(false);
 
+  const [walkMode, setWalkMode] = useState(false);
   const startedRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const metricsRef = useRef<SpeechMetrics | null>(null);
   const spokenUpToRef = useRef(0);
+  const autoMicForRef = useRef(-1);
 
   const recognition = useSpeechRecognition();
   const tts = useSpeechSynthesis();
@@ -200,6 +202,30 @@ export function InterviewRoom({
     });
   }, [turns, streaming]);
 
+  // Walk mode: after the interviewer finishes speaking, auto-start the mic
+  // (hands-free, once per AI turn).
+  const startListening = recognition.start;
+  useEffect(() => {
+    if (!walkMode || !recognition.supported) return;
+    if (phase !== "ready" || tts.speaking || recognition.listening) return;
+    if (turns.length === 0 || turns[turns.length - 1].speaker !== "ai") return;
+    if (autoMicForRef.current === turns.length) return;
+    autoMicForRef.current = turns.length;
+    tts.cancel();
+    startListening((finalText) =>
+      setComposer((prev) => (prev ? `${prev} ${finalText}` : finalText))
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walkMode, phase, tts.speaking, recognition.listening, turns.length]);
+
+  // Walk mode: auto-submit after ~4s of silence once something's been said.
+  useEffect(() => {
+    if (!walkMode || !recognition.listening || !composer.trim()) return;
+    const id = setTimeout(() => submit(), 4000);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walkMode, recognition.listening, composer]);
+
   // ---- composer / voice ----
   function toggleMic() {
     if (recognition.listening) {
@@ -294,6 +320,16 @@ export function InterviewRoom({
                   </span>
                 )}
               </>
+            )}
+            {recognition.supported && tts.supported && (
+              <Button
+                size="sm"
+                variant={walkMode ? "default" : "ghost"}
+                onClick={() => setWalkMode((w) => !w)}
+                title="Hands-free: the interviewer speaks, then auto-listens for your answer"
+              >
+                🚶 {walkMode ? "Walk on" : "Walk mode"}
+              </Button>
             )}
             {phase !== "ended" && (
               <Button

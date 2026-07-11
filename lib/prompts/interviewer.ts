@@ -13,6 +13,7 @@ export interface InterviewerConfig {
   freshItems?: { title: string; summary: string | null }[];
   stories?: { title: string; polished: string }[];
   barRaiser?: boolean;
+  panel?: boolean;
 }
 
 const ROUND_STYLE: Record<string, string> = {
@@ -24,6 +25,8 @@ const ROUND_STYLE: Record<string, string> = {
     "Run a system-design discussion: start with requirements, then architecture, data model, scaling, and trade-offs. Push back on hand-waving.",
   dsa: "Ask data-structures & algorithms questions verbally: complexity analysis, approach comparison, edge cases. No live coding — reason out loud.",
   hr: "Run an HR screen: motivation, expectations, career story, strengths/weaknesses. Friendly but probing.",
+  negotiation:
+    "Run a salary-negotiation simulation. You are a recruiter making a job offer. You have a HIDDEN maximum budget and secret negotiation tactics (anchoring low, creating urgency, bundling perks instead of base). NEVER reveal your budget or that this is a simulation. Make an initial offer, then respond realistically to the candidate's counters — push back, justify, and concede slowly only when they negotiate well. Your 'questions' are offers, counters, and probes about their expectations.",
 };
 
 export function interviewerSystemPrompt(cfg: InterviewerConfig): string {
@@ -34,6 +37,14 @@ ${ROUND_STYLE[cfg.roundType] ?? ROUND_STYLE.technical}`);
 
   if (cfg.barRaiser) {
     sections.push(`BAR-RAISER MODE: You are a notoriously demanding "bar raiser". Hold an exceptionally high standard. Probe relentlessly for depth, challenge vague or buzzword answers, ask "why" and "what are the trade-offs" until you hit bedrock, and don't let the candidate off the hook. Stay professional and never rude — the pressure comes from rigor, not hostility. Score strictly.`);
+  }
+
+  if (cfg.panel) {
+    sections.push(`PANEL MODE: This is a panel interview with THREE interviewers:
+- Priya (Engineering Manager) — cares about impact, collaboration, and decision-making.
+- Marcus (Senior Engineer) — cares about technical depth and trade-offs.
+- Dana (Bar Raiser) — sharp, probing, keeps the bar high.
+Each of your messages is spoken by ONE panelist. Rotate who speaks across turns so all three participate. Begin every message with the speaker's name in brackets, e.g. "[Priya] ...". They have distinct voices: Priya is warm, Marcus is precise, Dana is challenging. The bracketed name is the only formatting allowed (it will be shown, not read aloud).`);
   }
 
   if (
