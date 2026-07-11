@@ -12,7 +12,10 @@ export type MockKind =
   | "report"
   | "knowledge"
   | "quiz"
-  | "bank";
+  | "bank"
+  | "polish"
+  | "roast"
+  | "resume";
 
 const mockCurriculum = {
   stack_label: "React + Node.js",
@@ -308,6 +311,31 @@ const mockBank = {
   ],
 };
 
+const mockPolish = {
+  polished_md: `**Situation** — Our checkout service was timing out under Black Friday load.\n\n**Task** — As the on-call lead I had to restore it without a full rewrite.\n\n**Action** — I profiled the hot path, found an N+1 query, added a cache layer, and shipped behind a flag.\n\n**Result** — p95 latency dropped [quantify: e.g. from 3s to 400ms] and checkout held through peak.`,
+  tags: ["ownership", "performance"],
+};
+
+const mockRoast = {
+  roast_md: `Your resume says "results-driven team player" — so does everyone's. 😅\n\nBut real talk: you list six tools and zero outcomes. Recruiters skim for impact, not inventory.`,
+  fixes: [
+    "Replace 'responsible for X' with 'did X, which achieved Y' — lead with the result.",
+    "Cut the skills soup to the 8 that matter for your target role.",
+    "Add one number to every bullet — %, $, time saved, or scale.",
+  ],
+};
+
+const mockResume = {
+  summary: "Full-stack engineer with 4 years building React/Node products.",
+  years_experience: 4,
+  skills: ["react", "typescript", "node", "postgres", "aws"],
+  highlights: [
+    "Shipped a payments integration handling $2M/mo",
+    "Led migration to TypeScript across a 60k-LOC codebase",
+  ],
+  gaps: ["system design at scale", "kubernetes"],
+};
+
 /** Scripted interviewer turns so a full mock interview can be run offline. */
 function mockTurn(turnIdx: number): string {
   const turns = [
@@ -334,6 +362,12 @@ export function mockResponse(kind: MockKind, turnIdx = 0): string {
       return JSON.stringify(mockQuiz);
     case "bank":
       return JSON.stringify(mockBank);
+    case "polish":
+      return JSON.stringify(mockPolish);
+    case "roast":
+      return JSON.stringify(mockRoast);
+    case "resume":
+      return JSON.stringify(mockResume);
     case "turn":
       return mockTurn(turnIdx);
   }

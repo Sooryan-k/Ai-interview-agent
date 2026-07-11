@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const ROUNDS = [
@@ -46,6 +47,7 @@ export function NewInterviewForm({
   const [roundType, setRoundType] = useState("technical");
   const [difficulty, setDifficulty] = useState("medium");
   const [jdText, setJdText] = useState("");
+  const [barRaiser, setBarRaiser] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function start() {
@@ -65,6 +67,7 @@ export function NewInterviewForm({
           curriculumId,
           level,
           jdText: jdText.trim() || undefined,
+          barRaiser,
         }),
       });
       const data = await res.json();
@@ -156,6 +159,29 @@ export function NewInterviewForm({
             placeholder="Paste the JD you're interviewing for…"
           />
         </div>
+
+        <label
+          className={cn(
+            "flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors hover:bg-accent",
+            barRaiser && "border-primary bg-accent"
+          )}
+        >
+          <input
+            type="checkbox"
+            checked={barRaiser}
+            onChange={(e) => setBarRaiser(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            <span className="block text-sm font-medium">
+              🔥 Bar-raiser mode
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              A relentlessly demanding interviewer who probes for depth and
+              scores strictly. Turn it on when you want the hard version.
+            </span>
+          </span>
+        </label>
 
         <Button onClick={start} disabled={loading} size="lg" className="w-full">
           {loading ? "Setting up your interviewer…" : "Start interview"}

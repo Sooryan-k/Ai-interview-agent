@@ -11,6 +11,8 @@ export interface InterviewerConfig {
   skills?: Record<string, unknown> | null;
   topicScope?: { title: string; objective: string }[];
   freshItems?: { title: string; summary: string | null }[];
+  stories?: { title: string; polished: string }[];
+  barRaiser?: boolean;
 }
 
 const ROUND_STYLE: Record<string, string> = {
@@ -29,6 +31,22 @@ export function interviewerSystemPrompt(cfg: InterviewerConfig): string {
 
   sections.push(`You are ${cfg.interviewerName}, an experienced ${cfg.roleTrack} interviewer running a realistic ${cfg.difficulty}-difficulty mock interview round.
 ${ROUND_STYLE[cfg.roundType] ?? ROUND_STYLE.technical}`);
+
+  if (cfg.barRaiser) {
+    sections.push(`BAR-RAISER MODE: You are a notoriously demanding "bar raiser". Hold an exceptionally high standard. Probe relentlessly for depth, challenge vague or buzzword answers, ask "why" and "what are the trade-offs" until you hit bedrock, and don't let the candidate off the hook. Stay professional and never rude — the pressure comes from rigor, not hostility. Score strictly.`);
+  }
+
+  if (
+    cfg.roundType === "behavioral" &&
+    cfg.stories &&
+    cfg.stories.length > 0
+  ) {
+    sections.push(
+      `THE CANDIDATE'S OWN STORIES — they have prepared these real experiences. Weave your behavioral questions around them so the interview feels personal: reference a story by its theme and ask them to walk you through it, then probe for specifics (their exact role, the conflict, the numbers, what they'd do differently). Do NOT read the stories back to them verbatim.\n${cfg.stories
+        .map((s, i) => `${i + 1}. ${s.title}: ${s.polished.slice(0, 600)}`)
+        .join("\n")}`
+    );
+  }
 
   const candidateBits: string[] = [];
   if (cfg.targetRole) candidateBits.push(`Target role: ${cfg.targetRole}`);
@@ -75,7 +93,8 @@ ${ROUND_STYLE[cfg.roundType] ?? ROUND_STYLE.technical}`);
 
 export function transcriptPrompt(
   turns: { speaker: string; text: string }[],
-  candidateAnswer?: string
+  candidateAnswer?: string,
+  hint?: boolean
 ): string {
   const lines = turns.map(
     (t) => `${t.speaker === "ai" ? "INTERVIEWER" : "CANDIDATE"}: ${t.text}`
@@ -84,5 +103,9 @@ export function transcriptPrompt(
   const transcript = lines.length
     ? `Interview transcript so far:\n\n${lines.join("\n\n")}`
     : "The interview is about to begin. There is no transcript yet.";
+
+  if (hint) {
+    return `${transcript}\n\nThe candidate has asked for a HINT on the CURRENT question (do not advance to a new question). Give a brief, encouraging nudge: point them toward the key idea or framework they're missing without giving the full answer, then re-pose the same question. Follow the output protocol exactly; in the eval JSON for their previous answer, add the tag "used_hint".`;
+  }
   return `${transcript}\n\nProduce your next interviewer message now, following the output protocol exactly.`;
 }

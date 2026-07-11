@@ -42,6 +42,7 @@ export async function POST(request: Request) {
   const level = Number.isInteger(body?.level) ? (body.level as number) : null;
   const jdText =
     typeof body?.jdText === "string" ? body.jdText.slice(0, 4000) : null;
+  const barRaiser = body?.barRaiser === true;
   let roleTrack =
     typeof body?.roleTrack === "string" && body.roleTrack.trim()
       ? body.roleTrack.trim().slice(0, 80)
@@ -84,6 +85,7 @@ export async function POST(request: Request) {
     interviewer_name:
       INTERVIEWER_NAMES[Math.floor(Math.random() * INTERVIEWER_NAMES.length)],
     question_count: QUESTIONS_BY_DIFFICULTY[difficulty],
+    bar_raiser: barRaiser,
   };
 
   const { data: interview, error } = await supabase

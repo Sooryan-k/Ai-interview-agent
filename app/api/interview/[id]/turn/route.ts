@@ -42,6 +42,7 @@ export async function POST(
     body?.speechMetrics && typeof body.speechMetrics === "object"
       ? body.speechMetrics
       : null;
+  const hint = body?.hint === true;
 
   // Load the interview (RLS guarantees ownership).
   const { data: interview } = await supabase
@@ -70,7 +71,7 @@ export async function POST(
   // required — unless the last turn is the candidate's (an AI reply was lost
   // mid-stream), in which case a bare request nudges the interviewer again.
   const lastSpeaker = history[history.length - 1]?.speaker;
-  if (history.length > 0 && !answer && lastSpeaker !== "user") {
+  if (history.length > 0 && !answer && lastSpeaker !== "user" && !hint) {
     return NextResponse.json({ error: "answer required" }, { status: 400 });
   }
 
@@ -109,6 +110,7 @@ export async function POST(
   const persona = (interview.persona ?? {}) as {
     interviewer_name?: string;
     question_count?: number;
+    bar_raiser?: boolean;
   };
 
   let topicScope: { title: string; objective: string }[] | undefined;
@@ -127,18 +129,36 @@ export async function POST(
     }
   }
 
-  const [{ data: profile }, { data: fresh }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("target_role, skills")
-      .eq("id", user.id)
-      .maybeSingle(),
-    supabase
-      .from("knowledge_items")
-      .select("title, summary")
-      .order("fetched_at", { ascending: false })
-      .limit(3),
-  ]);
+  // Behavioral rounds pull in the candidate's own polished STAR stories.
+  const storiesPromise =
+    interview.round_type === "behavioral"
+      ? supabase
+          .from("stories")
+          .select("title, polished_md")
+          .eq("user_id", user.id)
+          .not("polished_md", "is", null)
+          .order("updated_at", { ascending: false })
+          .limit(5)
+      : Promise.resolve({ data: null });
+
+  const [{ data: profile }, { data: fresh }, { data: storyRows }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("target_role, skills")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("knowledge_items")
+        .select("title, summary")
+        .order("fetched_at", { ascending: false })
+        .limit(3),
+      storiesPromise,
+    ]);
+
+  const stories = (storyRows ?? [])
+    .filter((s) => s.polished_md)
+    .map((s) => ({ title: s.title as string, polished: s.polished_md as string }));
 
   const system = interviewerSystemPrompt({
     roleTrack: interview.role_track,
@@ -151,8 +171,10 @@ export async function POST(
     skills: profile?.skills,
     topicScope,
     freshItems: fresh ?? undefined,
+    stories: stories.length ? stories : undefined,
+    barRaiser: persona.bar_raiser === true,
   });
-  const prompt = transcriptPrompt(history, answer ?? undefined);
+  const prompt = transcriptPrompt(history, answer ?? undefined, hint);
 
   // Stream: forward visible text only; hold back the sentinel + eval JSON.
   const encoder = new TextEncoder();

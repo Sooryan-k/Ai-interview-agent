@@ -92,7 +92,11 @@ export function InterviewRoom({
   );
 
   const requestTurn = useCallback(
-    async (answer: string | null, metrics: SpeechMetrics | null) => {
+    async (
+      answer: string | null,
+      metrics: SpeechMetrics | null,
+      hint = false
+    ) => {
       setPhase("streaming");
       setStreaming("");
       spokenUpToRef.current = 0;
@@ -105,6 +109,7 @@ export function InterviewRoom({
           body: JSON.stringify({
             answer: answer ?? undefined,
             speechMetrics: metrics ?? undefined,
+            hint: hint || undefined,
           }),
         });
       } catch {
@@ -369,6 +374,20 @@ export function InterviewRoom({
                   {recognition.interim}
                 </p>
               )}
+              {turns.length > 0 &&
+                turns[turns.length - 1].speaker === "ai" && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => requestTurn(null, null, true)}
+                      disabled={phase !== "ready" || countdown > 0}
+                      className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
+                      title="Stuck? Get a nudge without giving up"
+                    >
+                      💡 Rescue me (hint)
+                    </button>
+                  </div>
+                )}
               <div className="flex items-end gap-2">
                 {recognition.supported && (
                   <Button
