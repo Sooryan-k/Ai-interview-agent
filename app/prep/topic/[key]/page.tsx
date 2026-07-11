@@ -56,7 +56,7 @@ export default async function TopicPage({
   return (
     <>
       <AppNav />
-      <main className="mx-auto w-full max-w-3xl px-6 py-10">
+      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="mb-8 space-y-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>{curriculumRow.stack_label}</span>

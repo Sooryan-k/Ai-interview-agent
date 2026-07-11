@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { CircleSlash, Flame, PartyPopper, Sparkles, ThumbsUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,8 +67,16 @@ export function PracticeDeck({
     return (
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">
-            {reviewed > 0 ? "🎉 Deck cleared" : "✨ All caught up"}
+          <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+            {reviewed > 0 ? (
+              <>
+                <PartyPopper className="size-6 text-primary" /> Deck cleared
+              </>
+            ) : (
+              <>
+                <Sparkles className="size-6 text-primary" /> All caught up
+              </>
+            )}
           </CardTitle>
           <CardDescription>
             {reviewed > 0
@@ -76,8 +85,8 @@ export function PracticeDeck({
                 ? "Nothing is due right now — come back later, or add more from the question bank."
                 : "You haven't added any cards yet. Drill questions from the bank to build your review deck."}
             {streak != null && (
-              <span className="mt-1 block text-orange-500">
-                🔥 {streak}-day streak
+              <span className="mt-1 flex items-center justify-center gap-1 text-orange-500">
+                <Flame className="size-3.5" /> {streak}-day streak
               </span>
             )}
           </CardDescription>
@@ -135,21 +144,21 @@ export function PracticeDeck({
                     className="border-red-500/40 hover:bg-red-500/10"
                     onClick={() => grade(1)}
                   >
-                    😬 Blanked
+                    <CircleSlash data-icon="inline-start" /> Blanked
                   </Button>
                   <Button
                     variant="outline"
                     className="border-amber-500/40 hover:bg-amber-500/10"
                     onClick={() => grade(3)}
                   >
-                    🤔 Hard
+                    Hard
                   </Button>
                   <Button
                     variant="outline"
                     className="border-emerald-500/40 hover:bg-emerald-500/10"
                     onClick={() => grade(5)}
                   >
-                    😎 Easy
+                    <ThumbsUp data-icon="inline-start" /> Easy
                   </Button>
                 </div>
               </div>

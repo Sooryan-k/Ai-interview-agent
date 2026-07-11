@@ -34,7 +34,7 @@ export default async function QuizPage({
   return (
     <>
       <AppNav />
-      <main className="mx-auto w-full max-w-2xl px-6 py-10">
+      <main className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="mb-6">
           <Link
             href={`/prep?c=${curriculumId}`}

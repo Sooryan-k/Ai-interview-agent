@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/AppNav";
+import { PageShell } from "@/components/PageShell";
 import { BankSeeder } from "@/components/prep/BankSeeder";
 import { AddToPractice } from "@/components/prep/AddToPractice";
 import { Badge } from "@/components/ui/badge";
@@ -69,14 +70,15 @@ export default async function BankPage({
   return (
     <>
       <AppNav />
-      <main className="mx-auto w-full max-w-3xl px-6 py-10">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Question bank</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+      <PageShell
+        title="Question bank"
+        description={
+          <>
             Real questions for <span className="font-medium">{roleTrack}</span>{" "}
             — browse, think out loud, then reveal what a great answer covers.
-          </p>
-        </div>
+          </>
+        }
+      >
 
         {/* Filters */}
         <div className="mb-6 space-y-2">
@@ -173,7 +175,7 @@ export default async function BankPage({
             ))}
           </div>
         )}
-      </main>
+      </PageShell>
     </>
   );
 }

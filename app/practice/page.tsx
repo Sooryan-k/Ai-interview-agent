@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/AppNav";
+import { PageShell } from "@/components/PageShell";
 import { PracticeDeck } from "@/components/practice/PracticeDeck";
 
 interface DueCard {
@@ -46,17 +47,13 @@ export default async function PracticePage() {
   return (
     <>
       <AppNav />
-      <main className="mx-auto w-full max-w-2xl px-6 py-10">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Practice</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Spaced repetition — questions resurface right before you&apos;d
-            forget them. {total ?? 0} card{(total ?? 0) === 1 ? "" : "s"} in your
-            deck.
-          </p>
-        </div>
+      <PageShell
+        maxWidth="narrow"
+        title="Practice"
+        description={`Spaced repetition — questions resurface right before you'd forget them. ${total ?? 0} card${(total ?? 0) === 1 ? "" : "s"} in your deck.`}
+      >
         <PracticeDeck initialCards={cards} totalCards={total ?? 0} />
-      </main>
+      </PageShell>
     </>
   );
 }

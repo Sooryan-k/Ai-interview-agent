@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -148,11 +149,15 @@ export function StoryManager({ initial }: { initial: Story[] }) {
                     onClick={() => polish(story.id)}
                     disabled={polishing === story.id}
                   >
-                    {polishing === story.id
-                      ? "Polishing…"
-                      : story.polished_md
-                        ? "Re-polish"
-                        : "✨ Polish to STAR"}
+                    {polishing === story.id ? (
+                      "Polishing…"
+                    ) : story.polished_md ? (
+                      "Re-polish"
+                    ) : (
+                      <>
+                        <Sparkles data-icon="inline-start" /> Polish to STAR
+                      </>
+                    )}
                   </Button>
                   <Button
                     size="sm"

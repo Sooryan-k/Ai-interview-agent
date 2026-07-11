@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -41,7 +42,13 @@ export function BankSeeder({
 
   return (
     <Button onClick={seed} disabled={loading} size="sm">
-      {loading ? "Generating questions…" : "✨ Generate this set"}
+      {loading ? (
+        "Generating questions…"
+      ) : (
+        <>
+          <Sparkles data-icon="inline-start" /> Generate this set
+        </>
+      )}
     </Button>
   );
 }

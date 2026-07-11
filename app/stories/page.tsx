@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/AppNav";
+import { PageShell } from "@/components/PageShell";
 import { StoryManager } from "@/components/stories/StoryManager";
 
 export default async function StoriesPage() {
@@ -19,17 +20,13 @@ export default async function StoriesPage() {
   return (
     <>
       <AppNav />
-      <main className="mx-auto w-full max-w-2xl px-6 py-10">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Story bank</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Your real experiences, polished into STAR answers. In behavioral
-            interviews the agent references these and probes them — so practice
-            feels like the real thing.
-          </p>
-        </div>
+      <PageShell
+        maxWidth="narrow"
+        title="Story bank"
+        description="Your real experiences, polished into STAR answers. In behavioral interviews the agent references these and probes them — so practice feels like the real thing."
+      >
         <StoryManager initial={stories ?? []} />
-      </main>
+      </PageShell>
     </>
   );
 }

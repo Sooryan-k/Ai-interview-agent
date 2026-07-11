@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { BookOpen, Check, Flame, ThumbsUp, Trophy, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -146,9 +147,15 @@ export function Quiz({
     return (
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">
-            {pct >= 80 ? "🏆" : pct >= 50 ? "👍" : "📚"} {correct}/
-            {questions.length} ({pct}%)
+          <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+            {pct >= 80 ? (
+              <Trophy className="size-6 text-amber-500" />
+            ) : pct >= 50 ? (
+              <ThumbsUp className="size-6 text-emerald-600" />
+            ) : (
+              <BookOpen className="size-6 text-muted-foreground" />
+            )}
+            {correct}/{questions.length} ({pct}%)
           </CardTitle>
           <CardDescription>
             {pct >= 80
@@ -157,8 +164,8 @@ export function Quiz({
                 ? "Decent — skim the missed topics before moving on."
                 : "Worth re-studying this module before the interview."}
             {streak != null && (
-              <span className="mt-1 block text-orange-500">
-                🔥 {streak}-day streak
+              <span className="mt-1 flex items-center justify-center gap-1 text-orange-500">
+                <Flame className="size-3.5" /> {streak}-day streak
               </span>
             )}
           </CardDescription>
@@ -244,10 +251,10 @@ export function Quiz({
             {q.type === "short" && selfMark === null && (
               <div className="flex gap-2 pt-1">
                 <Button size="sm" onClick={() => selfGrade(true)}>
-                  ✅ I covered it
+                  <Check data-icon="inline-start" /> I covered it
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => selfGrade(false)}>
-                  ❌ I missed it
+                  <X data-icon="inline-start" /> I missed it
                 </Button>
               </div>
             )}

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Brain, Plus } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
+import { PageShell } from "@/components/PageShell";
 import { Roadmap } from "@/components/prep/Roadmap";
 import { Button } from "@/components/ui/button";
 import { CurriculumSchema } from "@/lib/schemas";
@@ -41,7 +43,7 @@ export default async function PrepPage({
     return (
       <>
         <AppNav />
-        <main className="mx-auto w-full max-w-3xl px-6 py-12">
+        <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
           <p className="text-sm text-muted-foreground">
             This curriculum looks corrupted. Please create a new one from{" "}
             <Link className="underline" href="/onboarding">
@@ -69,19 +71,11 @@ export default async function PrepPage({
   return (
     <>
       <AppNav />
-      <main className="mx-auto w-full max-w-3xl px-6 py-10">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">Your prep path</p>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {curriculumRow?.stack_label ?? structure.stack_label}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {masteredCount} of {allTopics.length} topics mastered ·{" "}
-              {structure.levels.length} levels
-            </p>
-          </div>
-          <div className="flex gap-2">
+      <PageShell
+        title={curriculumRow?.stack_label ?? structure.stack_label}
+        description={`${masteredCount} of ${allTopics.length} topics mastered · ${structure.levels.length} levels`}
+        actions={
+          <>
             {enrollments.length > 1 && (
               <Button
                 variant="ghost"
@@ -94,17 +88,22 @@ export default async function PrepPage({
               size="sm"
               render={
                 <Link href={`/prep/cram?c=${selected.curriculum_id}`}>
-                  🧠 Cram sheet
+                  <Brain data-icon="inline-start" /> Cram sheet
                 </Link>
               }
             />
             <Button
               variant="outline"
               size="sm"
-              render={<Link href="/onboarding">+ New stack</Link>}
+              render={
+                <Link href="/onboarding">
+                  <Plus data-icon="inline-start" /> New stack
+                </Link>
+              }
             />
-          </div>
-        </div>
+          </>
+        }
+      >
 
         <Roadmap
           curriculumId={selected.curriculum_id}
@@ -115,7 +114,7 @@ export default async function PrepPage({
             (selected.quiz_scores ?? {}) as Record<string, { pct: number }>
           }
         />
-      </main>
+      </PageShell>
     </>
   );
 }

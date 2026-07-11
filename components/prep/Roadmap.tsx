@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ClipboardList } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -101,7 +102,7 @@ export function Roadmap({
                           quiz {quizScores[mod.key].pct}%
                         </Badge>
                       ) : (
-                        <>📝 Checkpoint quiz</>
+                        <><ClipboardList className="size-3.5" /> Checkpoint quiz</>
                       )}
                     </Link>
                   </div>
