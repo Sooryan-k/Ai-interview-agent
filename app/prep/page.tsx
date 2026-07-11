@@ -90,6 +90,15 @@ export default async function PrepPage({
               />
             )}
             <Button
+              variant="ghost"
+              size="sm"
+              render={
+                <Link href={`/prep/cram?c=${selected.curriculum_id}`}>
+                  🧠 Cram sheet
+                </Link>
+              }
+            />
+            <Button
               variant="outline"
               size="sm"
               render={<Link href="/onboarding">+ New stack</Link>}

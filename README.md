@@ -68,6 +68,20 @@ Quota guards (`daily_usage` table, atomic counter) cap per-user interviews/day a
 - `app/api/curriculum/route.ts` / `app/api/study/[key]/route.ts` — global-cache-first generation: the first user pays one call, everyone after reads the cache
 - `app/api/cron/knowledge/route.ts` — daily fresh-tech ingestion (HN + dev.to → one summarize call → `knowledge_items`)
 
-## Roadmap (next phases)
+## Feature map
 
-Module quizzes + mastery model → resume/JD personalization → spaced repetition of missed questions → coding rounds (Monaco + Piston) → panel interviews → shareable reports → company question packs.
+**Prep hub** — generated scratch→expert curriculum, on-demand study materials, module quizzes, cheat-sheet cram mode, question bank.
+**Practice** — spaced repetition (SM-2), daily drill, streaks.
+**Interviews** — voice/text mock rounds (behavioral/technical/system-design/DSA/HR), **bar-raiser** and **panel** modes, **salary-negotiation sim**, **whiteboard round graded by AI vision**, **coding round** (Monaco + free Piston execution), hands-free walk mode, rescue-me hints.
+**Personalization** — resume upload (client-side PDF parse) + skill profile, "roast my resume", STAR **story bank** the interviewer actually references, JD-tailored questions.
+**Insights & retention** — skill radar, weakness heatmap, delivery-coaching trends, XP/levels/badges, shareable reports, PDF export, calendar (.ics) study plan, installable PWA with offline study pages + daily reminders.
+
+Everything runs on free tiers. Generated content (curricula, study materials, quizzes, question bank) is cached globally so marginal AI cost per new user trends toward zero; only interviews consume per-user quota.
+
+## Dev scripts
+
+```bash
+npx tsx scripts/verify-protocol.ts   # interview wire protocol (sentinel/eval)
+npx tsx scripts/verify-wave1.ts      # streaks, analytics, schemas
+npx tsx scripts/verify-wave2.ts      # SM-2, XP, ics, schemas
+```

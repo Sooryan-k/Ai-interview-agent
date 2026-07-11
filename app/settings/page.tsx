@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/AppNav";
 import { DisplayNameForm } from "@/components/settings/DisplayNameForm";
 import { ResumeUpload } from "@/components/settings/ResumeUpload";
+import { NotificationToggle } from "@/components/settings/NotificationToggle";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -64,6 +65,19 @@ export default async function SettingsPage() {
                 </a>
               }
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Daily reminders</CardTitle>
+            <CardDescription>
+              A once-a-day browser nudge to keep your streak alive. Fires only
+              when you open the app — no background tracking.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <NotificationToggle />
           </CardContent>
         </Card>
 
