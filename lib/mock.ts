@@ -16,7 +16,8 @@ export type MockKind =
   | "polish"
   | "roast"
   | "resume"
-  | "whiteboard";
+  | "whiteboard"
+  | "codeReview";
 
 const mockCurriculum = {
   stack_label: "React + Node.js",
@@ -361,6 +362,19 @@ const mockWhiteboard = {
     "A solid baseline design that would pass a junior screen but needs caching and redundancy for a senior bar.",
 };
 
+const mockCodeReview = {
+  overall_score: 74,
+  correctness: "Passes the provided tests; may not handle empty input.",
+  complexity: "O(n²) time, O(1) space — a hash map would make it O(n).",
+  strengths: ["Readable variable names", "Correct core logic"],
+  improvements: [
+    "Use a hash map to count complements in one pass",
+    "Handle the empty-input edge case",
+  ],
+  cleaner_approach:
+    "Iterate once, storing seen values in a set/dict and checking for target−x as you go.",
+};
+
 /** Scripted interviewer turns so a full mock interview can be run offline. */
 function mockTurn(turnIdx: number): string {
   const turns = [
@@ -395,6 +409,8 @@ export function mockResponse(kind: MockKind, turnIdx = 0): string {
       return JSON.stringify(mockResume);
     case "whiteboard":
       return JSON.stringify(mockWhiteboard);
+    case "codeReview":
+      return JSON.stringify(mockCodeReview);
     case "turn":
       return mockTurn(turnIdx);
   }

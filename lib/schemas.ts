@@ -135,6 +135,17 @@ export const WhiteboardCritiqueSchema = z.object({
 });
 export type WhiteboardCritique = z.infer<typeof WhiteboardCritiqueSchema>;
 
+// ---------- Coding round review ----------
+export const CodeReviewSchema = z.object({
+  overall_score: z.number().min(0).max(100),
+  correctness: z.string().catch(""),
+  complexity: z.string().catch(""),
+  strengths: z.array(z.string()).catch([]),
+  improvements: z.array(z.string()).catch([]),
+  cleaner_approach: z.string().catch(""),
+});
+export type CodeReview = z.infer<typeof CodeReviewSchema>;
+
 // ---------- Wire protocol constants ----------
 export const EVAL_SENTINEL = "<<<EVAL>>>";
 export const END_MARKER = "[END_OF_INTERVIEW]";
