@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Link2, Lock, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -72,19 +73,25 @@ export function ReportActions({
       {slug ? (
         <>
           <Button size="sm" variant="outline" onClick={copyLink}>
-            🔗 Copy public link
+            <Link2 data-icon="inline-start" /> Copy public link
           </Button>
           <Button size="sm" variant="ghost" onClick={unshare} disabled={busy}>
-            Make private
+            <Lock data-icon="inline-start" /> Make private
           </Button>
         </>
       ) : (
         <Button size="sm" variant="outline" onClick={share} disabled={busy}>
-          {busy ? "Creating link…" : "🔗 Share report"}
+          {busy ? (
+            "Creating link…"
+          ) : (
+            <>
+              <Link2 data-icon="inline-start" /> Share report
+            </>
+          )}
         </Button>
       )}
       <Button size="sm" variant="ghost" onClick={() => window.print()}>
-        🖨 Save as PDF
+        <Printer data-icon="inline-start" /> Save as PDF
       </Button>
     </div>
   );

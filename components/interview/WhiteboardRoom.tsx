@@ -172,7 +172,7 @@ export function WhiteboardRoom({ question }: { question: string }) {
           </Button>
         </div>
       </div>
-      <div className="flex-1">
+      <div className="min-h-[60vh] flex-1">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <Excalidraw excalidrawAPI={(a: any) => setApi(a)} />
       </div>

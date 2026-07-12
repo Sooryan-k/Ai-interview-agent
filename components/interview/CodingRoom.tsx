@@ -3,6 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -144,7 +145,7 @@ export function CodingRoom({ problem }: { problem: CodingProblem }) {
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col lg:flex-row">
       {/* Problem panel */}
-      <div className="border-b lg:w-2/5 lg:overflow-y-auto lg:border-r lg:border-b-0">
+      <div className="max-h-[40vh] overflow-y-auto border-b lg:max-h-none lg:w-2/5 lg:overflow-y-auto lg:border-r lg:border-b-0">
         <div className="space-y-3 p-6">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-semibold">{problem.title}</h1>
@@ -176,7 +177,7 @@ export function CodingRoom({ problem }: { problem: CodingProblem }) {
       </div>
 
       {/* Editor panel */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex items-center gap-2 border-b px-4 py-2">
           <div className="flex gap-1">
             {LANGUAGES.map((l) => (
@@ -194,7 +195,13 @@ export function CodingRoom({ problem }: { problem: CodingProblem }) {
           </div>
           <div className="ml-auto flex gap-2">
             <Button size="sm" variant="outline" onClick={runTests} disabled={running}>
-              {running ? "Running…" : "▶ Run tests"}
+              {running ? (
+                "Running…"
+              ) : (
+                <>
+                  <Play data-icon="inline-start" /> Run tests
+                </>
+              )}
             </Button>
             <Button size="sm" onClick={finish} disabled={finishing || !results}>
               {finishing ? "Reviewing…" : "Finish & review"}

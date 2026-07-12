@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -73,7 +74,15 @@ export function TranscriptReplay({
       onClick={playing ? stop : play}
       className="print-hidden"
     >
-      {playing ? "■ Stop replay" : "🔊 Play interview"}
+      {playing ? (
+        <>
+          <Square data-icon="inline-start" /> Stop replay
+        </>
+      ) : (
+        <>
+          <Volume2 data-icon="inline-start" /> Play interview
+        </>
+      )}
     </Button>
   );
 }

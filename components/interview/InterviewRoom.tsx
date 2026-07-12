@@ -2,6 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  Footprints,
+  Lightbulb,
+  Mic,
+  Square,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -286,8 +294,16 @@ export function InterviewRoom({
             </span>
             {tts.supported && (
               <>
-                <Button size="sm" variant="ghost" onClick={tts.toggle}>
-                  {tts.enabled ? "🔊 Voice on" : "🔇 Voice off"}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={tts.toggle}
+                  title={tts.enabled ? "Mute interviewer voice" : "Unmute interviewer voice"}
+                >
+                  {tts.enabled ? <Volume2 /> : <VolumeX />}
+                  <span className="hidden sm:inline">
+                    {tts.enabled ? "Voice on" : "Voice off"}
+                  </span>
                 </Button>
                 {tts.enabled && (
                   <span className="flex overflow-hidden rounded-md border text-xs">
@@ -302,7 +318,7 @@ export function InterviewRoom({
                       )}
                       title="Female interviewer voice"
                     >
-                      ♀ Female
+                      F
                     </button>
                     <button
                       type="button"
@@ -315,7 +331,7 @@ export function InterviewRoom({
                       )}
                       title="Male interviewer voice"
                     >
-                      ♂ Male
+                      M
                     </button>
                   </span>
                 )}
@@ -328,7 +344,10 @@ export function InterviewRoom({
                 onClick={() => setWalkMode((w) => !w)}
                 title="Hands-free: the interviewer speaks, then auto-listens for your answer"
               >
-                🚶 {walkMode ? "Walk on" : "Walk mode"}
+                <Footprints />
+                <span className="hidden sm:inline">
+                  {walkMode ? "Walk on" : "Walk mode"}
+                </span>
               </Button>
             )}
             {phase !== "ended" && (
@@ -420,7 +439,9 @@ export function InterviewRoom({
                       className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
                       title="Stuck? Get a nudge without giving up"
                     >
-                      💡 Rescue me (hint)
+                      <span className="inline-flex items-center gap-1">
+                        <Lightbulb className="size-3.5" /> Rescue me (hint)
+                      </span>
                     </button>
                   </div>
                 )}
@@ -437,7 +458,15 @@ export function InterviewRoom({
                         : "Answer with your voice"
                     }
                   >
-                    {recognition.listening ? "■ Stop" : "🎙 Speak"}
+                    {recognition.listening ? (
+                      <>
+                        <Square /> <span className="hidden sm:inline">Stop</span>
+                      </>
+                    ) : (
+                      <>
+                        <Mic /> <span className="hidden sm:inline">Speak</span>
+                      </>
+                    )}
                   </Button>
                 )}
                 <Textarea

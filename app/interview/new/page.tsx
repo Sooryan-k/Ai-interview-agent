@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Code2, PenTool } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
 import { NewInterviewForm } from "@/components/interview/NewInterviewForm";
 import { CurriculumSchema } from "@/lib/schemas";
@@ -66,7 +67,9 @@ export default async function NewInterviewPage({
             href="/interview/whiteboard"
             className="rounded-lg border p-4 transition-colors hover:bg-accent"
           >
-            <p className="text-sm font-medium">📐 Whiteboard round</p>
+            <p className="flex items-center gap-2 text-sm font-medium">
+              <PenTool className="size-4 text-primary" /> Whiteboard round
+            </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Draw a system design; AI grades your actual diagram.
             </p>
@@ -75,7 +78,9 @@ export default async function NewInterviewPage({
             href="/interview/coding"
             className="rounded-lg border p-4 transition-colors hover:bg-accent"
           >
-            <p className="text-sm font-medium">💻 Coding round</p>
+            <p className="flex items-center gap-2 text-sm font-medium">
+              <Code2 className="size-4 text-primary" /> Coding round
+            </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Solve in a real editor, run tests, get an AI code review.
             </p>

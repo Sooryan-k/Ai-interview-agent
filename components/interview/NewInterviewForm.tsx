@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Flame, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -29,7 +30,7 @@ const ROUNDS = [
   { value: "system_design", label: "System design" },
   { value: "dsa", label: "DSA (verbal, no coding)" },
   { value: "hr", label: "HR screen" },
-  { value: "negotiation", label: "💰 Salary negotiation sim" },
+  { value: "negotiation", label: "Salary negotiation sim" },
 ];
 
 export function NewInterviewForm({
@@ -176,8 +177,8 @@ export function NewInterviewForm({
             className="mt-0.5"
           />
           <span>
-            <span className="block text-sm font-medium">
-              🔥 Bar-raiser mode
+            <span className="flex items-center gap-1.5 text-sm font-medium">
+              <Flame className="size-4 text-orange-500" /> Bar-raiser mode
             </span>
             <span className="block text-xs text-muted-foreground">
               A relentlessly demanding interviewer who probes for depth and
@@ -199,8 +200,8 @@ export function NewInterviewForm({
             className="mt-0.5"
           />
           <span>
-            <span className="block text-sm font-medium">
-              👥 Panel interview
+            <span className="flex items-center gap-1.5 text-sm font-medium">
+              <Users className="size-4 text-primary" /> Panel interview
             </span>
             <span className="block text-xs text-muted-foreground">
               Face three interviewers with different personalities — an
