@@ -58,7 +58,7 @@ export default async function SharedReportPage({
   const perQuestion = (report.per_question ?? []) as PerQuestion[];
 
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-6 px-6 py-10">
+    <main className="mx-auto w-full max-w-3xl space-y-6 px-4 sm:px-6 py-10">
       <div className="print-hidden rounded-lg border bg-muted/40 px-4 py-2 text-center text-xs text-muted-foreground">
         Shared mock-interview report ·{" "}
         <Link href="/" className="underline underline-offset-2">
@@ -89,7 +89,7 @@ export default async function SharedReportPage({
         <div className="text-center">
           <div
             className={cn(
-              "text-5xl font-bold tabular-nums",
+              "text-4xl font-bold tabular-nums sm:text-5xl",
               scoreColor(report.overall_score ?? 0, 100)
             )}
           >

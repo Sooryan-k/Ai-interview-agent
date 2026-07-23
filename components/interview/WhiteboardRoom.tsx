@@ -88,15 +88,15 @@ export function WhiteboardRoom({ question }: { question: string }) {
 
   if (critique) {
     return (
-      <main className="mx-auto w-full max-w-3xl space-y-6 px-6 py-10">
-        <div className="flex items-start justify-between gap-4">
+      <main className="mx-auto w-full max-w-3xl space-y-6 px-4 sm:px-6 py-10">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Whiteboard critique</p>
             <h1 className="text-2xl font-bold tracking-tight">System design</h1>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">{question}</p>
           </div>
           <div className="text-center">
-            <div className={cn("text-5xl font-bold tabular-nums", scoreColor(critique.overall_score))}>
+            <div className={cn("text-4xl font-bold tabular-nums sm:text-5xl", scoreColor(critique.overall_score))}>
               {critique.overall_score}
             </div>
             <p className="text-xs text-muted-foreground">/ 100</p>
@@ -162,7 +162,7 @@ export function WhiteboardRoom({ question }: { question: string }) {
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">
       <div className="border-b bg-muted/30">
-        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-3 px-6 py-2.5">
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-3 px-4 sm:px-6 py-2.5">
           <div className="min-w-0 flex-1">
             <p className="text-xs text-muted-foreground">Design this — then submit for AI critique</p>
             <p className="truncate text-sm font-medium">{question}</p>

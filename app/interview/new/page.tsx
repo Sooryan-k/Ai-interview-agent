@@ -53,7 +53,7 @@ export default async function NewInterviewPage({
   return (
     <>
       <AppNav />
-      <main className="mx-auto w-full max-w-2xl space-y-4 px-6 py-10">
+      <main className="mx-auto w-full max-w-2xl space-y-4 px-4 sm:px-6 py-10">
         <NewInterviewForm
           defaultRoleTrack={defaultRoleTrack}
           curriculumId={curriculumId}

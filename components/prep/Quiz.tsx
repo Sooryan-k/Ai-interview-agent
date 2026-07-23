@@ -183,7 +183,7 @@ export function Quiz({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="text-base">{moduleTitle} — checkpoint</CardTitle>
           <Badge variant="outline" className="shrink-0 tabular-nums">
             {idx + 1}/{questions.length}

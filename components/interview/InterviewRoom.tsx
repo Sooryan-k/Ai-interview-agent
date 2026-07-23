@@ -283,12 +283,12 @@ export function InterviewRoom({
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">
       {/* Status bar */}
       <div className="border-b bg-muted/30">
-        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-2 px-6 py-2 text-sm">
+        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-2 px-4 sm:px-6 py-2 text-sm">
           <span className="font-medium">{interviewerName}</span>
           <span className="text-muted-foreground">· {roleTrack}</span>
           <Badge variant="outline">{roundType.replace("_", " ")}</Badge>
           <Badge variant="outline">{difficulty}</Badge>
-          <span className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
             <span className="text-xs text-muted-foreground tabular-nums">
               Q {Math.min(aiTurnCount, questionCount)}/{questionCount}
             </span>
@@ -360,13 +360,13 @@ export function InterviewRoom({
                 End early
               </Button>
             )}
-          </span>
+          </div>
         </div>
       </div>
 
       {/* Transcript */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-3xl space-y-4 px-6 py-6">
+        <div className="mx-auto w-full max-w-3xl space-y-4 px-4 sm:px-6 py-6">
           {turns.map((t, i) => (
             <div
               key={i}
@@ -408,7 +408,7 @@ export function InterviewRoom({
 
       {/* Footer: composer / end states */}
       <div className="border-t">
-        <div className="mx-auto w-full max-w-3xl px-6 py-4">
+        <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 py-4">
           {phase === "ended" ? (
             <div className="flex flex-col items-center gap-3 py-2 text-center">
               <p className="text-sm text-muted-foreground">

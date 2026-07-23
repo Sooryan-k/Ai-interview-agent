@@ -87,7 +87,7 @@ export default async function ReportPage({
   return (
     <>
       <AppNav />
-      <main className="mx-auto w-full max-w-3xl space-y-6 px-6 py-10">
+      <main className="mx-auto w-full max-w-3xl space-y-6 px-4 sm:px-6 py-10">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -105,7 +105,7 @@ export default async function ReportPage({
           <div className="text-center">
             <div
               className={cn(
-                "text-5xl font-bold tabular-nums",
+                "text-4xl font-bold tabular-nums sm:text-5xl",
                 scoreColor(report.overall_score ?? 0, 100)
               )}
             >

@@ -121,7 +121,7 @@ export function StoryManager({ initial }: { initial: Story[] }) {
           {stories.map((story) => (
             <Card key={story.id}>
               <CardHeader>
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <CardTitle className="text-base">{story.title}</CardTitle>
                   <div className="flex shrink-0 items-center gap-2">
                     {story.tags?.map((t) => (

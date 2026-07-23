@@ -82,7 +82,7 @@ export function Roadmap({
             <AccordionContent className="space-y-4 pb-4">
               {level.modules.map((mod) => (
                 <div key={mod.key}>
-                  <div className="mb-2 flex items-center justify-between gap-2">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <h4 className="text-sm font-medium text-muted-foreground">
                       {mod.title}
                     </h4>

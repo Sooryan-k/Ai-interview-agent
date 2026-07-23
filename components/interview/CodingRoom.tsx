@@ -108,10 +108,10 @@ export function CodingRoom({ problem }: { problem: CodingProblem }) {
     const c = (s: number) =>
       s >= 75 ? "text-emerald-600 dark:text-emerald-400" : s >= 50 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400";
     return (
-      <main className="mx-auto w-full max-w-2xl space-y-5 px-6 py-10">
-        <div className="flex items-center justify-between">
+      <main className="mx-auto w-full max-w-2xl space-y-5 px-4 sm:px-6 py-10">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-bold tracking-tight">Code review</h1>
-          <span className={cn("text-4xl font-bold tabular-nums", c(review.overall_score))}>
+          <span className={cn("text-3xl font-bold tabular-nums sm:text-4xl", c(review.overall_score))}>
             {review.overall_score}
           </span>
         </div>
@@ -178,7 +178,7 @@ export function CodingRoom({ problem }: { problem: CodingProblem }) {
 
       {/* Editor panel */}
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex items-center gap-2 border-b px-4 py-2">
+        <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2">
           <div className="flex gap-1">
             {LANGUAGES.map((l) => (
               <button

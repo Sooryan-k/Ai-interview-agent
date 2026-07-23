@@ -88,7 +88,7 @@ export function DailyDrill() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <Zap className="size-4 text-primary" /> Daily drill{" "}
             {kind === "review" && (

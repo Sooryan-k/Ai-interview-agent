@@ -110,7 +110,7 @@ export function PracticeDeck({
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle className="text-base">Recall check</CardTitle>
             {card.tags?.[0] && <Badge variant="outline">{card.tags[0]}</Badge>}
           </div>

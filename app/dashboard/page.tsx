@@ -256,7 +256,7 @@ export default async function DashboardPage() {
 
         {/* Prep paths */}
         <section className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-semibold">Your prep paths</h2>
             <Button
               size="sm"
@@ -291,7 +291,7 @@ export default async function DashboardPage() {
 
         {/* Interview history */}
         <section className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-semibold">Recent interviews</h2>
             <Button
               size="sm"

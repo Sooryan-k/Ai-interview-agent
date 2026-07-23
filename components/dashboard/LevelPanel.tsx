@@ -16,7 +16,7 @@ export function LevelPanel({ inputs }: { inputs: XpInputs }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">
             Level {r.level} · {r.levelTitle}
           </CardTitle>
