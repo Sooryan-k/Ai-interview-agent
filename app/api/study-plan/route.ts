@@ -81,7 +81,7 @@ export async function GET(request: Request) {
   return new Response(ics, {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": 'attachment; filename="preppilot-study-plan.ics"',
+      "Content-Disposition": 'attachment; filename="dryrun-study-plan.ics"',
     },
   });
 }

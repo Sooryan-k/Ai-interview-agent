@@ -1,4 +1,4 @@
-# PrepPilot — AI Interview Agent
+# DryRun — AI Interview Agent
 
 Sign in, pick your stack, and the agent prepares **everything** for your interviews:
 

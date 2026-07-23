@@ -145,7 +145,7 @@ export default function LoginPage() {
         <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground">
           <Target className="size-5" />
         </span>
-        <span className="text-lg font-bold tracking-tight">PrepPilot</span>
+        <span className="text-lg font-bold tracking-tight">DryRun</span>
       </Link>
       <Suspense>
         <LoginForm />

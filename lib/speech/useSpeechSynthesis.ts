@@ -16,7 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
  */
 
 export type VoiceGender = "female" | "male";
-const GENDER_STORAGE_KEY = "preppilot:voiceGender";
+const GENDER_STORAGE_KEY = "dryrun:voiceGender";
 
 const FEMALE_NAMES =
   /(samantha|victoria|allison|ava|susan|karen|moira|tessa|fiona|serena|zoe|nicky|kate|veena|amelie|anna|ellen|joana|luciana|paulina|alice|sara|nora)/;

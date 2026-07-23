@@ -72,7 +72,7 @@ export default function Home() {
             <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
               <Target className="size-4" />
             </span>
-            <span className="text-sm font-bold tracking-tight">PrepPilot</span>
+            <span className="text-sm font-bold tracking-tight">DryRun</span>
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -184,7 +184,7 @@ export default function Home() {
 
       <footer className="border-t">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
-          <span>PrepPilot — free AI interview preparation</span>
+          <span>DryRun — free AI interview preparation</span>
           <span>Runs on free tiers. Your voice never leaves the browser.</span>
         </div>
       </footer>

@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PrepPilot — AI Interview Agent",
-    short_name: "PrepPilot",
+    name: "DryRun — AI Interview Agent",
+    short_name: "DryRun",
     description:
       "Your AI interview prep copilot: scratch-to-expert study paths, quizzes, and voice mock interviews.",
     start_url: "/dashboard",

@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PrepPilot — AI Interview Agent",
+  title: "DryRun — AI Interview Agent",
   description:
     "Pick your stack; the agent builds your scratch-to-expert prep path, teaches you, and interviews you with voice.",
 };

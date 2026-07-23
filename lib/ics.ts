@@ -27,7 +27,7 @@ export function buildStudyIcs(blocks: StudyBlock[]): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//PrepPilot//Study Plan//EN",
+    "PRODID:-//DryRun//Study Plan//EN",
     "CALSCALE:GREGORIAN",
   ];
   for (const b of blocks) {
@@ -36,7 +36,7 @@ export function buildStudyIcs(blocks: StudyBlock[]): string {
     const end = new Date(start.getTime() + b.minutes * 60_000);
     lines.push(
       "BEGIN:VEVENT",
-      `UID:${crypto.randomUUID()}@preppilot`,
+      `UID:${crypto.randomUUID()}@dryrun`,
       `DTSTAMP:${icsDate(new Date())}`,
       `DTSTART:${icsDate(start)}`,
       `DTEND:${icsDate(end)}`,

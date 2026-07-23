@@ -20,10 +20,10 @@ export function PwaBootstrap() {
         Notification.permission === "granted"
       ) {
         const today = new Date().toISOString().slice(0, 10);
-        const last = localStorage.getItem("preppilot:lastDrillNotify");
+        const last = localStorage.getItem("dryrun:lastDrillNotify");
         if (last !== today) {
-          localStorage.setItem("preppilot:lastDrillNotify", today);
-          new Notification("PrepPilot", {
+          localStorage.setItem("dryrun:lastDrillNotify", today);
+          new Notification("DryRun", {
             body: "Your daily drill is ready — keep your streak alive 🔥",
             icon: "/icon.svg",
           });
