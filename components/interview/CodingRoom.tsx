@@ -143,7 +143,7 @@ export function CodingRoom({ problem }: { problem: CodingProblem }) {
   const passedCount = results?.filter((r) => r.passed).length ?? 0;
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] flex-col lg:flex-row">
+    <div className="flex h-[calc(100dvh-3.5rem)] flex-col lg:flex-row">
       {/* Problem panel */}
       <div className="max-h-[40vh] overflow-y-auto border-b lg:max-h-none lg:w-2/5 lg:overflow-y-auto lg:border-r lg:border-b-0">
         <div className="space-y-3 p-6">

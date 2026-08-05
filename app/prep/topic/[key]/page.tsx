@@ -58,18 +58,20 @@ export default async function TopicPage({
       <AppNav />
       <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="mb-8 space-y-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
             <span>{curriculumRow.stack_label}</span>
             <span>·</span>
             <span>{topicCtx.levelTitle}</span>
             <span>·</span>
             <span>{topicCtx.moduleTitle}</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight text-balance">
             {topicCtx.topic.title}
           </h1>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">~{topicCtx.topic.est_minutes} min</Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="shrink-0">
+              ~{topicCtx.topic.est_minutes} min
+            </Badge>
             <p className="text-sm text-muted-foreground">
               {topicCtx.topic.objective}
             </p>

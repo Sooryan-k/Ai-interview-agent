@@ -280,7 +280,7 @@ export function InterviewRoom({
   }
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] flex-col">
+    <div className="flex h-[calc(100dvh-3.5rem)] flex-col">
       {/* Status bar */}
       <div className="border-b bg-muted/30">
         <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-2 px-4 sm:px-6 py-2 text-sm">

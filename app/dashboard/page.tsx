@@ -56,7 +56,7 @@ export default async function DashboardPage() {
         .limit(10),
       supabase
         .from("profiles")
-        .select("display_name, streak_count, last_active_date")
+        .select("display_name, username, streak_count, last_active_date")
         .eq("id", user.id)
         .maybeSingle(),
     ]);
@@ -176,7 +176,7 @@ export default async function DashboardPage() {
       <PageShell
         maxWidth="wide"
         className="space-y-8"
-        title={`Hey${profile?.display_name ? ` ${profile.display_name}` : ""} 👋`}
+        title={`Hey${profile?.username ? ` @${profile.username}` : profile?.display_name ? ` ${profile.display_name}` : ""} 👋`}
         description="Pick up where you left off, or start a new round."
         actions={
           streakAlive && (profile?.streak_count ?? 0) > 0 ? (
