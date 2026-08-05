@@ -45,7 +45,7 @@ export function Footer() {
                 <Target className="size-4" />
               </span>
               <span className="text-sm font-bold tracking-tight">
-                DryRun
+                DryRun AI
               </span>
             </Link>
             <p className="max-w-[26ch] text-sm text-muted-foreground">
@@ -120,7 +120,7 @@ export function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-2 border-t pt-6 text-xs text-muted-foreground sm:flex-row">
-          <span>© {new Date().getFullYear()} DryRun. Built free, forever.</span>
+          <span>© {new Date().getFullYear()} DryRun AI. Built free, forever.</span>
           <span>Runs entirely on free tiers — no paywalls, no catch.</span>
         </div>
       </div>

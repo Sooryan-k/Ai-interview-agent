@@ -27,7 +27,7 @@ export function buildStudyIcs(blocks: StudyBlock[]): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//DryRun//Study Plan//EN",
+    "PRODID:-//DryRun AI//Study Plan//EN",
     "CALSCALE:GREGORIAN",
   ];
   for (const b of blocks) {

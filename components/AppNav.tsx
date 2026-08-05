@@ -89,7 +89,7 @@ export function AppNav() {
           <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
             <Target className="size-4" />
           </span>
-          <span className="text-sm font-bold tracking-tight">DryRun</span>
+          <span className="text-sm font-bold tracking-tight">DryRun AI</span>
         </Link>
 
         {/* Desktop links */}

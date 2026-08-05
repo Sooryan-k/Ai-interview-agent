@@ -23,7 +23,7 @@ export function PwaBootstrap() {
         const last = localStorage.getItem("dryrun:lastDrillNotify");
         if (last !== today) {
           localStorage.setItem("dryrun:lastDrillNotify", today);
-          new Notification("DryRun", {
+          new Notification("DryRun AI", {
             body: "Your daily drill is ready — keep your streak alive 🔥",
             icon: "/icon.svg",
           });

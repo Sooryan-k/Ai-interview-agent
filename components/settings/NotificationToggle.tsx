@@ -24,7 +24,7 @@ export function NotificationToggle() {
       setPerm(result);
       if (result === "granted") {
         toast.success("Daily reminders on — we'll nudge you once a day.");
-        new Notification("DryRun", {
+        new Notification("DryRun AI", {
           body: "You're all set — see you at your next drill 🔥",
           icon: "/icon.svg",
         });
