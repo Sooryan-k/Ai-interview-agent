@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   BadgeDollarSign,
   BarChart3,
@@ -10,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { createClient } from "@/lib/supabase/server";
 
 const FEATURES = [
   {
@@ -62,7 +64,15 @@ const STEPS = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) redirect("/dashboard");
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Top bar */}
