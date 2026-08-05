@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  LayoutGrid,
   Library,
   LogOut,
   Menu,
@@ -117,6 +118,27 @@ export function AppNav() {
             <TooltipTrigger
               render={
                 <Link
+                  href="/features"
+                  className={cn(
+                    "hidden rounded-md px-3 py-1.5 text-sm transition-colors md:flex md:items-center md:gap-1.5",
+                    isActive(pathname, "/features")
+                      ? "bg-muted font-medium text-foreground"
+                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  )}
+                >
+                  <LayoutGrid className="size-4" />
+                  Features
+                </Link>
+              }
+            />
+            <TooltipContent>
+              Everything the app can do, in one place
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Link
                   href="/prep/bank"
                   className={cn(
                     "hidden rounded-md px-3 py-1.5 text-sm transition-colors md:flex md:items-center md:gap-1.5",
@@ -212,7 +234,7 @@ export function AppNav() {
                 </span>
               </div>
             )}
-            {[...LINKS, { href: "/prep/bank", label: "Question Bank" }, { href: "/settings", label: "Settings" }].map(
+            {[...LINKS, { href: "/prep/bank", label: "Question Bank" }, { href: "/features", label: "Features" }, { href: "/settings", label: "Settings" }].map(
               (l) => (
                 <Link
                   key={l.href}

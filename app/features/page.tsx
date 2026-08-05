@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
+  ArrowRight,
   BadgeDollarSign,
   BarChart3,
   Bell,
@@ -38,6 +39,7 @@ interface Feature {
   icon: typeof Map;
   title: string;
   desc: string;
+  href: string;
 }
 
 const PREP: Feature[] = [
@@ -45,31 +47,37 @@ const PREP: Feature[] = [
     icon: Map,
     title: "Scratch → expert roadmap",
     desc: "Pick a stack (React, Python, DevOps — anything) and tell it where you're starting from. The agent generates a full curriculum: levels, modules and topics, sequenced so each one builds on the last.",
+    href: "/onboarding",
   },
   {
     icon: FileText,
     title: "Generated study material & cheat sheets",
     desc: "Every topic in your roadmap comes with written study notes and a one-page cheat sheet you can skim right before an interview — generated once per topic and reused for everyone, so it costs nothing to keep revisiting.",
+    href: "/prep",
   },
   {
     icon: BookOpen,
     title: "Checkpoint quizzes & cram sheets",
     desc: "Short multiple-choice quizzes after each module confirm you actually absorbed it, and a cram-sheet view compresses an entire level into last-minute review material.",
+    href: "/prep",
   },
   {
     icon: Library,
     title: "Question bank",
     desc: "A searchable, filterable bank of every interview question the app has ever asked — across all users. Browse by round type or difficulty and drop any question straight into your practice deck.",
+    href: "/prep/bank",
   },
   {
     icon: Zap,
     title: "Daily drill & spaced repetition",
     desc: "One 60-second question a day keeps the habit alive. Questions you got wrong resurface on a spaced-repetition schedule — right before you'd naturally forget them, not on a fixed calendar.",
+    href: "/practice",
   },
   {
     icon: FileText,
     title: "Resume-aware prep",
     desc: "Upload your resume and the agent reads it — prep topics, interview questions, and even negotiation context can tailor themselves to your actual background instead of generic questions.",
+    href: "/settings",
   },
 ];
 
@@ -78,36 +86,43 @@ const INTERVIEW: Feature[] = [
     icon: Mic,
     title: "Voice mock interviews",
     desc: "A realistic interviewer speaks the question out loud, listens to your spoken answer, and asks real follow-ups based on what you actually said — not a fixed script. Typing works too if you'd rather not talk.",
+    href: "/interview/new",
   },
   {
     icon: Footprints,
     title: "Walk mode (hands-free)",
     desc: "Turn this on and the whole interview runs hands-free: the interviewer speaks, the mic auto-listens for your reply, and it auto-submits after a few seconds of silence — good for pacing back and forth while you think out loud.",
+    href: "/interview/new",
   },
   {
     icon: PenTool,
     title: "Whiteboard rounds",
     desc: "Draw your system design on an open canvas — boxes, arrows, whatever you'd sketch on a real whiteboard. The AI actually looks at your diagram (not just a text description) and critiques the components, bottlenecks and missing pieces.",
+    href: "/interview/whiteboard",
   },
   {
     icon: Code2,
     title: "Coding rounds",
     desc: "A real in-browser code editor with multiple language support. Run your solution against test cases, then get an AI review covering correctness, time/space complexity, and a cleaner approach than what you wrote.",
+    href: "/interview/coding",
   },
   {
     icon: Flame,
     title: "Bar-raiser mode",
     desc: "An optional, meaner version of the interviewer — relentlessly probes for depth and scores strictly. Turn it on when you want the version that doesn't go easy on you.",
+    href: "/interview/new",
   },
   {
     icon: Users,
     title: "Panel interviews",
     desc: "Face three interviewer personalities in the same session — an engineering manager, a senior engineer, and a bar raiser — each with a different angle on your answers, the way a real onsite loop actually feels.",
+    href: "/interview/new",
   },
   {
     icon: BadgeDollarSign,
     title: "Salary negotiation simulator",
     desc: "Practice the offer conversation against a recruiter persona with a hidden budget. Learn to anchor a number, hold silence after asking, and not leave money on the table — before it's a real offer.",
+    href: "/interview/new",
   },
 ];
 
@@ -116,26 +131,31 @@ const PROGRESS: Feature[] = [
     icon: ClipboardList,
     title: "Report cards",
     desc: "Every interview ends with a full breakdown: an overall score, strengths, weaknesses, and a per-question comparison between your answer summary and a model answer.",
+    href: "/dashboard",
   },
   {
     icon: Link2,
     title: "Shareable reports",
     desc: "Turn any report card into a read-only link you can send to a mentor, a friend, or a study group — no login required to view it.",
+    href: "/dashboard",
   },
   {
     icon: BarChart3,
     title: "Delivery coaching",
     desc: "Filler words, speaking pace and pauses are tracked automatically across your voice interviews, so you can watch your spoken confidence trend upward over time — not just your answer content.",
+    href: "/dashboard",
   },
   {
     icon: Target,
     title: "Skill radar",
     desc: "Your average answer score broken down by skill (communication, problem-solving, system design, and more), plotted so you can see your shape at a glance.",
+    href: "/dashboard",
   },
   {
     icon: TrendingDown,
     title: "Weakness heatmap",
     desc: "A skill × interview grid showing exactly where you're weakest and whether it's improving or not — computed entirely from evaluations you already have, no extra AI calls.",
+    href: "/dashboard",
   },
 ];
 
@@ -144,21 +164,25 @@ const HABIT: Feature[] = [
     icon: Trophy,
     title: "Streaks, XP & badges",
     desc: "Daily streaks for showing up, XP for real study actions (interviews, quizzes, mastered topics, drills), and unlockable badges like \"Week Warrior\" or \"Quiz Master\" for hitting milestones.",
+    href: "/dashboard",
   },
   {
     icon: Brain,
     title: "Story bank",
     desc: "Turn your real work experiences into polished STAR-format stories. In behavioral rounds, the interviewer references and probes these directly — so practice actually feels like the real thing instead of generic hypotheticals.",
+    href: "/stories",
   },
   {
     icon: CalendarDays,
     title: "Study plan export",
     desc: "Download a two-week .ics calendar built from your unfinished topics, with a daily study block already scheduled. Import it straight into Google or Apple Calendar and let it remind you.",
+    href: "/settings",
   },
   {
     icon: Bell,
     title: "Daily reminders",
     desc: "An opt-in, once-a-day browser nudge to keep your streak alive — fires only when you'd normally have the app open, no background tracking or push subscriptions.",
+    href: "/settings",
   },
 ];
 
@@ -167,16 +191,19 @@ const PLATFORM: Feature[] = [
     icon: Sparkles,
     title: "100% free, no catch",
     desc: "The whole app runs on free-tier infrastructure end to end. No paywalls, no credit card, no \"premium\" tier hiding the features that actually matter.",
+    href: "/",
   },
   {
     icon: Mic,
     title: "Voice stays in your browser",
     desc: "Speech recognition and text-to-speech both run using your browser's built-in APIs. Your voice audio is never uploaded or stored anywhere — only the transcribed text is sent for scoring.",
+    href: "/interview/new",
   },
   {
     icon: Download,
     title: "Installable & works offline",
     desc: "Install DryRun AI to your home screen like a native app. Pages you've already visited keep working without a connection, so you can review study material anywhere.",
+    href: "/settings",
   },
 ];
 
@@ -200,18 +227,22 @@ function FeatureGroup({
         </h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((f) => (
-            <div
+            <Link
               key={f.title}
-              className="rounded-xl border bg-background p-5 transition-shadow hover:shadow-sm"
+              href={f.href}
+              className="group rounded-xl border bg-background p-5 transition-colors hover:border-primary/40 hover:bg-accent/50"
             >
               <span className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
                 <f.icon className="size-4.5" />
               </span>
-              <h3 className="mt-3.5 text-sm font-semibold">{f.title}</h3>
+              <h3 className="mt-3.5 flex items-center gap-1 text-sm font-semibold">
+                {f.title}
+                <ArrowRight className="size-3.5 -translate-x-1 text-primary opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+              </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
                 {f.desc}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
