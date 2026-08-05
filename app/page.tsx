@@ -181,13 +181,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      <footer className="border-t">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
-          <span>DryRun — free AI interview preparation</span>
-          <span>Runs on free tiers. Your voice never leaves the browser.</span>
-        </div>
-      </footer>
     </div>
   );
 }

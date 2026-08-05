@@ -4,6 +4,7 @@ import { CalendarDays } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
 import { PageShell } from "@/components/PageShell";
 import { DisplayNameForm } from "@/components/settings/DisplayNameForm";
+import { UsernameForm } from "@/components/settings/UsernameForm";
 import { ResumeUpload } from "@/components/settings/ResumeUpload";
 import { NotificationToggle } from "@/components/settings/NotificationToggle";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, resume_struct, resume_text")
+    .select("display_name, username, resume_struct, resume_text")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -42,6 +43,8 @@ export default async function SettingsPage() {
       >
 
         <DisplayNameForm initial={profile?.display_name ?? ""} />
+
+        <UsernameForm initial={profile?.username ?? ""} />
 
         <ResumeUpload
           initialStruct={parsedStruct.success ? parsedStruct.data : null}

@@ -3,6 +3,8 @@ import { Geist_Mono, Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { PwaBootstrap } from "@/components/PwaBootstrap";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Footer } from "@/components/Footer";
+import { UsernameGate } from "@/components/UsernameGate";
 import "./globals.css";
 
 const inter = Inter({
@@ -43,8 +45,10 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           {children}
+          <Footer />
           <Toaster richColors position="top-center" />
           <PwaBootstrap />
+          <UsernameGate />
         </ThemeProvider>
       </body>
     </html>
