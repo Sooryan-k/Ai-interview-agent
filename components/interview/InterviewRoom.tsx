@@ -365,7 +365,7 @@ export function InterviewRoom({
       </div>
 
       {/* Transcript */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-3xl space-y-4 px-4 sm:px-6 py-6">
           {turns.map((t, i) => (
             <div

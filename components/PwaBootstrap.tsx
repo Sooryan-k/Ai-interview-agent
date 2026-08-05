@@ -20,9 +20,9 @@ export function PwaBootstrap() {
         Notification.permission === "granted"
       ) {
         const today = new Date().toISOString().slice(0, 10);
-        const last = localStorage.getItem("dryrun:lastDrillNotify");
+        const last = localStorage.getItem("dryrun-ai:lastDrillNotify");
         if (last !== today) {
-          localStorage.setItem("dryrun:lastDrillNotify", today);
+          localStorage.setItem("dryrun-ai:lastDrillNotify", today);
           new Notification("DryRun AI", {
             body: "Your daily drill is ready — keep your streak alive 🔥",
             icon: "/icon.svg",

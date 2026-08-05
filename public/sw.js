@@ -3,7 +3,7 @@
  * fresh online), falling back to a runtime cache when offline. Lets previously
  * visited study pages open without a connection. Zero cost.
  */
-const CACHE = "dryrun-v1";
+const CACHE = "dryrun-ai-v1";
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();

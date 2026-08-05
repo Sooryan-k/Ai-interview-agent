@@ -36,7 +36,7 @@ export function buildStudyIcs(blocks: StudyBlock[]): string {
     const end = new Date(start.getTime() + b.minutes * 60_000);
     lines.push(
       "BEGIN:VEVENT",
-      `UID:${crypto.randomUUID()}@dryrun`,
+      `UID:${crypto.randomUUID()}@dryrun-ai`,
       `DTSTAMP:${icsDate(new Date())}`,
       `DTSTART:${icsDate(start)}`,
       `DTEND:${icsDate(end)}`,
