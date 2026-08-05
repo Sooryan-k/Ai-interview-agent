@@ -5,6 +5,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { computeXp, type XpInputs } from "@/lib/xp";
 import { cn } from "@/lib/utils";
 
@@ -34,21 +35,29 @@ export function LevelPanel({ inputs }: { inputs: XpInputs }) {
         </div>
         <div className="flex flex-wrap gap-2">
           {r.badges.map((b) => (
-            <span
-              key={b.key}
-              title={b.earned ? b.label : `Locked — ${b.hint}`}
-              className={cn(
-                "flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-opacity",
-                b.earned
-                  ? "border-primary/40 bg-primary/5"
-                  : "opacity-40 grayscale"
-              )}
-            >
-              <span>{b.icon}</span>
-              <span className={cn(!b.earned && "text-muted-foreground")}>
-                {b.label}
-              </span>
-            </span>
+            <Tooltip key={b.key}>
+              <TooltipTrigger
+                render={
+                  <span
+                    tabIndex={0}
+                    className={cn(
+                      "flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-opacity",
+                      b.earned
+                        ? "border-primary/40 bg-primary/5"
+                        : "opacity-40 grayscale"
+                    )}
+                  >
+                    <span>{b.icon}</span>
+                    <span className={cn(!b.earned && "text-muted-foreground")}>
+                      {b.label}
+                    </span>
+                  </span>
+                }
+              />
+              <TooltipContent>
+                {b.earned ? b.label : `Locked — ${b.hint}`}
+              </TooltipContent>
+            </Tooltip>
           ))}
         </div>
         {earned.length === 0 && (

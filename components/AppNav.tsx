@@ -23,6 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -112,19 +113,27 @@ export function AppNav() {
 
         {/* Right side */}
         <div className="ml-auto flex items-center gap-1">
-          <Link
-            href="/prep/bank"
-            title="Question bank"
-            className={cn(
-              "hidden rounded-md px-3 py-1.5 text-sm transition-colors md:flex md:items-center md:gap-1.5",
-              isActive(pathname, "/prep/bank")
-                ? "bg-muted font-medium text-foreground"
-                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-            )}
-          >
-            <Library className="size-4" />
-            Bank
-          </Link>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Link
+                  href="/prep/bank"
+                  className={cn(
+                    "hidden rounded-md px-3 py-1.5 text-sm transition-colors md:flex md:items-center md:gap-1.5",
+                    isActive(pathname, "/prep/bank")
+                      ? "bg-muted font-medium text-foreground"
+                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  )}
+                >
+                  <Library className="size-4" />
+                  Bank
+                </Link>
+              }
+            />
+            <TooltipContent>
+              Every question you&apos;ve ever been asked, searchable
+            </TooltipContent>
+          </Tooltip>
           <ThemeToggle />
 
           <div
@@ -166,16 +175,23 @@ export function AppNav() {
           </DropdownMenu>
 
           {/* Mobile hamburger */}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="md:hidden"
-            aria-label={open ? "Close menu" : "Open menu"}
-            aria-expanded={open}
-            onClick={() => setOpen((o) => !o)}
-          >
-            {open ? <X /> : <Menu />}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="md:hidden"
+                  aria-label={open ? "Close menu" : "Open menu"}
+                  aria-expanded={open}
+                  onClick={() => setOpen((o) => !o)}
+                >
+                  {open ? <X /> : <Menu />}
+                </Button>
+              }
+            />
+            <TooltipContent>{open ? "Close menu" : "Open menu"}</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 

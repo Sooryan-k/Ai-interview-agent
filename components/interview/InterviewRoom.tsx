@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   useSpeechRecognition,
   countFillers,
@@ -294,71 +295,108 @@ export function InterviewRoom({
             </span>
             {tts.supported && (
               <>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={tts.toggle}
-                  title={tts.enabled ? "Mute interviewer voice" : "Unmute interviewer voice"}
-                >
-                  {tts.enabled ? <Volume2 /> : <VolumeX />}
-                  <span className="hidden sm:inline">
-                    {tts.enabled ? "Voice on" : "Voice off"}
-                  </span>
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button size="sm" variant="ghost" onClick={tts.toggle}>
+                        {tts.enabled ? <Volume2 /> : <VolumeX />}
+                        <span className="hidden sm:inline">
+                          {tts.enabled ? "Voice on" : "Voice off"}
+                        </span>
+                      </Button>
+                    }
+                  />
+                  <TooltipContent>
+                    {tts.enabled
+                      ? "Mute the interviewer's voice"
+                      : "Unmute — hear the interviewer speak"}
+                  </TooltipContent>
+                </Tooltip>
                 {tts.enabled && (
                   <span className="flex overflow-hidden rounded-md border text-xs">
-                    <button
-                      type="button"
-                      onClick={() => tts.setGender("female")}
-                      className={cn(
-                        "px-2 py-1 transition-colors",
-                        tts.gender === "female"
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-muted"
-                      )}
-                      title="Female interviewer voice"
-                    >
-                      F
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => tts.setGender("male")}
-                      className={cn(
-                        "px-2 py-1 transition-colors",
-                        tts.gender === "male"
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-muted"
-                      )}
-                      title="Male interviewer voice"
-                    >
-                      M
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <button
+                            type="button"
+                            onClick={() => tts.setGender("female")}
+                            className={cn(
+                              "px-2 py-1 transition-colors",
+                              tts.gender === "female"
+                                ? "bg-primary text-primary-foreground"
+                                : "hover:bg-muted"
+                            )}
+                          >
+                            F
+                          </button>
+                        }
+                      />
+                      <TooltipContent>Female interviewer voice</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <button
+                            type="button"
+                            onClick={() => tts.setGender("male")}
+                            className={cn(
+                              "px-2 py-1 transition-colors",
+                              tts.gender === "male"
+                                ? "bg-primary text-primary-foreground"
+                                : "hover:bg-muted"
+                            )}
+                          >
+                            M
+                          </button>
+                        }
+                      />
+                      <TooltipContent>Male interviewer voice</TooltipContent>
+                    </Tooltip>
                   </span>
                 )}
               </>
             )}
             {recognition.supported && tts.supported && (
-              <Button
-                size="sm"
-                variant={walkMode ? "default" : "ghost"}
-                onClick={() => setWalkMode((w) => !w)}
-                title="Hands-free: the interviewer speaks, then auto-listens for your answer"
-              >
-                <Footprints />
-                <span className="hidden sm:inline">
-                  {walkMode ? "Walk on" : "Walk mode"}
-                </span>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      size="sm"
+                      variant={walkMode ? "default" : "ghost"}
+                      onClick={() => setWalkMode((w) => !w)}
+                    >
+                      <Footprints />
+                      <span className="hidden sm:inline">
+                        {walkMode ? "Walk on" : "Walk mode"}
+                      </span>
+                    </Button>
+                  }
+                />
+                <TooltipContent>
+                  Hands-free: the interviewer speaks, then auto-listens for
+                  your answer
+                </TooltipContent>
+              </Tooltip>
             )}
             {phase !== "ended" && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={finish}
-                disabled={finishing || turns.length < 2}
-              >
-                End early
-              </Button>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={finish}
+                      disabled={finishing || turns.length < 2}
+                    >
+                      End early
+                    </Button>
+                  }
+                />
+                <TooltipContent>
+                  Wrap up now and get your report card from what you&apos;ve
+                  answered so far
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
         </div>
@@ -432,42 +470,61 @@ export function InterviewRoom({
               {turns.length > 0 &&
                 turns[turns.length - 1].speaker === "ai" && (
                   <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => requestTurn(null, null, true)}
-                      disabled={phase !== "ready" || countdown > 0}
-                      className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
-                      title="Stuck? Get a nudge without giving up"
-                    >
-                      <span className="inline-flex items-center gap-1">
-                        <Lightbulb className="size-3.5" /> Rescue me (hint)
-                      </span>
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <button
+                            type="button"
+                            onClick={() => requestTurn(null, null, true)}
+                            disabled={phase !== "ready" || countdown > 0}
+                            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              <Lightbulb className="size-3.5" /> Rescue me
+                              (hint)
+                            </span>
+                          </button>
+                        }
+                      />
+                      <TooltipContent>
+                        Stuck? Get a nudge without giving up
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 )}
               <div className="flex items-end gap-2">
                 {recognition.supported && (
-                  <Button
-                    type="button"
-                    variant={recognition.listening ? "destructive" : "outline"}
-                    onClick={toggleMic}
-                    className="shrink-0"
-                    title={
-                      recognition.listening
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant={
+                            recognition.listening ? "destructive" : "outline"
+                          }
+                          onClick={toggleMic}
+                          className="shrink-0"
+                        >
+                          {recognition.listening ? (
+                            <>
+                              <Square />{" "}
+                              <span className="hidden sm:inline">Stop</span>
+                            </>
+                          ) : (
+                            <>
+                              <Mic />{" "}
+                              <span className="hidden sm:inline">Speak</span>
+                            </>
+                          )}
+                        </Button>
+                      }
+                    />
+                    <TooltipContent>
+                      {recognition.listening
                         ? "Stop dictating"
-                        : "Answer with your voice"
-                    }
-                  >
-                    {recognition.listening ? (
-                      <>
-                        <Square /> <span className="hidden sm:inline">Stop</span>
-                      </>
-                    ) : (
-                      <>
-                        <Mic /> <span className="hidden sm:inline">Speak</span>
-                      </>
-                    )}
-                  </Button>
+                        : "Answer with your voice"}
+                    </TooltipContent>
+                  </Tooltip>
                 )}
                 <Textarea
                   value={composer}

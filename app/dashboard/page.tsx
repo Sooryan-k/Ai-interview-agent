@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CurriculumSchema } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { Flame, Mic, Target, TrendingDown } from "lucide-react";
@@ -180,16 +181,25 @@ export default async function DashboardPage() {
         description="Pick up where you left off, or start a new round."
         actions={
           streakAlive && (profile?.streak_count ?? 0) > 0 ? (
-            <div
-              className="flex items-center gap-1.5 rounded-full border bg-orange-500/10 px-3 py-1.5 text-sm font-semibold text-orange-600 dark:text-orange-400"
-              title="Days in a row you've studied, drilled or interviewed"
-            >
-              <Flame className="size-4" />
-              {profile!.streak_count}
-              <span className="hidden font-normal text-muted-foreground sm:inline">
-                day streak
-              </span>
-            </div>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <div
+                    tabIndex={0}
+                    className="flex items-center gap-1.5 rounded-full border bg-orange-500/10 px-3 py-1.5 text-sm font-semibold text-orange-600 dark:text-orange-400"
+                  >
+                    <Flame className="size-4" />
+                    {profile!.streak_count}
+                    <span className="hidden font-normal text-muted-foreground sm:inline">
+                      day streak
+                    </span>
+                  </div>
+                }
+              />
+              <TooltipContent>
+                Days in a row you&apos;ve studied, drilled or interviewed
+              </TooltipContent>
+            </Tooltip>
           ) : undefined
         }
       >

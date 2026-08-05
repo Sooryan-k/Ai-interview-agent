@@ -5,6 +5,7 @@ import { PwaBootstrap } from "@/components/PwaBootstrap";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Footer } from "@/components/Footer";
 import { UsernameGate } from "@/components/UsernameGate";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 const inter = Inter({
@@ -44,11 +45,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          {children}
-          <Footer />
+          <TooltipProvider delay={200}>
+            {children}
+            <Footer />
+            <UsernameGate />
+          </TooltipProvider>
           <Toaster richColors position="top-center" />
           <PwaBootstrap />
-          <UsernameGate />
         </ThemeProvider>
       </body>
     </html>
