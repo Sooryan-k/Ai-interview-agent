@@ -484,7 +484,7 @@ export function InterviewRoom({
                       : "Type your answer (or use the mic) — Enter to send"
                   }
                   rows={1}
-                  className="min-h-11 resize-none placeholder:text-sm sm:min-h-16"
+                  className="min-h-11 resize-none placeholder:text-xs sm:min-h-16 sm:placeholder:text-sm"
                   disabled={phase === "streaming" || phase === "connecting"}
                 />
                 <Button
