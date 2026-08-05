@@ -3,9 +3,11 @@
  * fresh online), falling back to a runtime cache when offline. Lets previously
  * visited study pages open without a connection. Zero cost.
  */
-const CACHE = "dryrun-ai-v1";
+const CACHE = "dryrun-ai-v2";
+const OFFLINE_URL = "/offline.html";
 
 self.addEventListener("install", (e) => {
+  e.waitUntil(caches.open(CACHE).then((c) => c.add(OFFLINE_URL)));
   self.skipWaiting();
 });
 
@@ -36,6 +38,22 @@ self.addEventListener("fetch", (event) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match("/dashboard")))
+      .catch(async () => {
+        // Network failed (offline, or a transient blip). Serve whatever
+        // we have cached, in order of usefulness — but always resolve
+        // to a real Response: resolving `undefined` here makes the
+        // browser treat the whole navigation as a hard failure (a blank
+        // "This page couldn't load" screen), even when the network is
+        // actually fine and this was just a one-off timeout.
+        const hit = await caches.match(req);
+        if (hit) return hit;
+        if (req.mode === "navigate") {
+          const dashboard = await caches.match("/dashboard");
+          if (dashboard) return dashboard;
+          const offline = await caches.match(OFFLINE_URL);
+          if (offline) return offline;
+        }
+        return fetch(req);
+      })
   );
 });
