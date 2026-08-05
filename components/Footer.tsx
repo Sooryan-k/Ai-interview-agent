@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Mic, Target } from "lucide-react";
 
 const PRODUCT_LINKS = [
+  { href: "/features", label: "All features" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/prep", label: "Prep path" },
   { href: "/prep/bank", label: "Question bank" },
