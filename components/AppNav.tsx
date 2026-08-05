@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -176,7 +177,9 @@ export function AppNav() {
             <DropdownMenuContent align="end" sideOffset={8}>
               {username && (
                 <>
-                  <DropdownMenuLabel>@{username}</DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>@{username}</DropdownMenuLabel>
+                  </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                 </>
               )}
