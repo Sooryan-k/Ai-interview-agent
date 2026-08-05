@@ -68,6 +68,7 @@ Quota guards (`daily_usage` table, atomic counter) cap per-user interviews/day a
 - `app/api/interview/[id]/turn/route.ts` — the turn engine: streams the interviewer's reply, holds back the `<<<EVAL>>>` sentinel, persists the hidden per-answer score
 - `app/api/curriculum/route.ts` / `app/api/study/[key]/route.ts` — global-cache-first generation: the first user pays one call, everyone after reads the cache
 - `app/api/cron/knowledge/route.ts` — daily fresh-tech ingestion (HN + dev.to → one summarize call → `knowledge_items`)
+- SEO/branding: `app/icon.tsx`, `app/apple-icon.tsx`, `app/opengraph-image.tsx` and `app/twitter-image.tsx` generate the favicon, home-screen icon and social-share cards from code (via `next/og`) instead of static image files, so they always match the brand mark. `app/robots.ts` and `app/sitemap.ts` generate `/robots.txt` and `/sitemap.xml`. All four (plus `metadataBase` in `app/layout.tsx`) hardcode a `SITE_URL` constant — update it if you move off `dryrunai.vercel.app` to a custom domain.
 
 ## Feature map
 
@@ -76,6 +77,8 @@ Quota guards (`daily_usage` table, atomic counter) cap per-user interviews/day a
 **Interviews** — voice/text mock rounds (behavioral/technical/system-design/DSA/HR), **bar-raiser** and **panel** modes, **salary-negotiation sim**, **whiteboard round graded by AI vision**, **coding round** (Monaco + free Piston execution), hands-free walk mode, rescue-me hints.
 **Personalization** — resume upload (client-side PDF parse) + skill profile, "roast my resume", STAR **story bank** the interviewer actually references, JD-tailored questions.
 **Insights & retention** — skill radar, weakness heatmap, delivery-coaching trends, XP/levels/badges, shareable reports, PDF export, calendar (.ics) study plan, installable PWA with offline study pages + daily reminders.
+
+A public `/features` page explains every one of the above in plain language, with each entry linking straight to where it lives in the app.
 
 Everything runs on free tiers. Generated content (curricula, study materials, quizzes, question bank) is cached globally so marginal AI cost per new user trends toward zero; only interviews consume per-user quota.
 

@@ -19,10 +19,42 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://dryrunai.vercel.app";
+const DESCRIPTION =
+  "Pick your stack; the agent builds your scratch-to-expert prep path, teaches you, and interviews you with voice, whiteboard and code — free, forever.";
+
 export const metadata: Metadata = {
-  title: "DryRun AI — Interview Agent",
-  description:
-    "Pick your stack; the agent builds your scratch-to-expert prep path, teaches you, and interviews you with voice.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "DryRun AI — Interview Agent",
+    template: "%s — DryRun AI",
+  },
+  description: DESCRIPTION,
+  keywords: [
+    "AI interview practice",
+    "mock interview",
+    "technical interview prep",
+    "system design interview",
+    "coding interview practice",
+    "behavioral interview questions",
+    "interview simulator",
+    "voice mock interview",
+  ],
+  authors: [{ name: "DryRun AI" }],
+  robots: { index: true, follow: true },
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: "DryRun AI",
+    title: "DryRun AI — Interview Agent",
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DryRun AI — Interview Agent",
+    description: DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {
