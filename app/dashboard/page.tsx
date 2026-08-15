@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/AppNav";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,10 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CurriculumSchema } from "@/lib/schemas";
-import { cn } from "@/lib/utils";
 import { Flame, Mic, Target, TrendingDown } from "lucide-react";
 import { utcDay } from "@/lib/streak";
 import { PageShell } from "@/components/PageShell";
@@ -29,6 +26,8 @@ import {
   type EvalTurnRow,
 } from "@/lib/analytics";
 import { LevelPanel } from "@/components/dashboard/LevelPanel";
+import { PrepPathsList } from "@/components/dashboard/PrepPathsList";
+import { RecentInterviews } from "@/components/dashboard/RecentInterviews";
 import type { XpInputs } from "@/lib/xp";
 
 export default async function DashboardPage() {
@@ -274,29 +273,7 @@ export default async function DashboardPage() {
               render={<Link href="/onboarding">+ New stack</Link>}
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {paths.map((p) => (
-              <Link key={p.curriculumId} href={`/prep?c=${p.curriculumId}`}>
-                <Card className="h-full transition-colors hover:bg-accent/50">
-                  <CardHeader>
-                    <CardTitle className="text-base">{p.label}</CardTitle>
-                    <CardDescription>
-                      {p.levelTitle ? `Currently: ${p.levelTitle} · ` : ""}
-                      {p.mastered}/{p.total} topics mastered
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-3">
-                      <Progress value={p.pct} className="h-2" />
-                      <span className="text-sm font-medium tabular-nums">
-                        {p.pct}%
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+          <PrepPathsList initial={paths} />
         </section>
 
         {/* Interview history */}
@@ -308,65 +285,23 @@ export default async function DashboardPage() {
               render={<Link href="/interview/new">New interview</Link>}
             />
           </div>
-          {!interviews || interviews.length === 0 ? (
-            <Card>
-              <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                No interviews yet. Your first mock round takes ~10 minutes —
-                voice or text.
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="divide-y rounded-lg border">
-              {interviews.map((iv) => {
-                const report = Array.isArray(iv.reports)
-                  ? iv.reports[0]
-                  : iv.reports;
-                const score = report?.overall_score;
-                const href = report
-                  ? `/report/${iv.id}`
-                  : `/interview/${iv.id}`;
-                return (
-                  <Link
-                    key={iv.id}
-                    href={href}
-                    className="flex items-center gap-3 p-4 transition-colors hover:bg-accent/50"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">
-                        {iv.role_track}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(iv.started_at).toLocaleDateString()} ·{" "}
-                        {iv.round_type.replace("_", " ")} · {iv.difficulty}
-                      </p>
-                    </div>
-                    {score != null ? (
-                      <span
-                        className={cn(
-                          "text-lg font-bold tabular-nums",
-                          score >= 75
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : score >= 50
-                              ? "text-amber-600 dark:text-amber-400"
-                              : "text-red-600 dark:text-red-400"
-                        )}
-                      >
-                        {score}
-                      </span>
-                    ) : (
-                      <Badge
-                        variant={
-                          iv.status === "active" ? "default" : "secondary"
-                        }
-                      >
-                        {iv.status === "active" ? "Resume" : iv.status}
-                      </Badge>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+          <RecentInterviews
+            initial={(interviews ?? []).map((iv) => {
+              const report = Array.isArray(iv.reports)
+                ? iv.reports[0]
+                : iv.reports;
+              return {
+                id: iv.id,
+                roleTrack: iv.role_track,
+                startedAt: iv.started_at,
+                roundType: iv.round_type,
+                difficulty: iv.difficulty,
+                status: iv.status,
+                score: report?.overall_score ?? null,
+                href: report ? `/report/${iv.id}` : `/interview/${iv.id}`,
+              };
+            })}
+          />
         </section>
       </PageShell>
     </>

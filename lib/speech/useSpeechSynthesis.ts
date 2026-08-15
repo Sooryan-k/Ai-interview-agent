@@ -91,6 +91,8 @@ export function useSpeechSynthesis(lang = "en-US") {
   const [gender, setGenderState] = useState<VoiceGender>("female");
   const enabledRef = useRef(true);
   const pendingRef = useRef(0);
+  const pendingTextsRef = useRef<string[]>([]); // queued/playing utterance text, in order
+  const genRef = useRef(0); // bumped on any interruption, so stale onend/onerror callbacks no-op
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
   const genderRef = useRef<VoiceGender>("female");
@@ -126,22 +128,6 @@ export function useSpeechSynthesis(lang = "en-US") {
     };
   }, [reselect]);
 
-  const setGender = useCallback(
-    (next: VoiceGender) => {
-      genderRef.current = next;
-      setGenderState(next);
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(GENDER_STORAGE_KEY, next);
-        // Stop any current speech so the new voice takes over immediately.
-        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-      }
-      pendingRef.current = 0;
-      setSpeaking(false);
-      reselect();
-    },
-    [reselect]
-  );
-
   const speak = useCallback(
     (text: string) => {
       if (!enabledRef.current) return;
@@ -158,10 +144,15 @@ export function useSpeechSynthesis(lang = "en-US") {
       utterance.pitch = genderRef.current === "male" ? 0.9 : 1.05;
       utterance.volume = 1.0;
 
+      const myGen = genRef.current;
       pendingRef.current += 1;
+      pendingTextsRef.current.push(clean);
       setSpeaking(true);
       const done = () => {
+        if (myGen !== genRef.current) return; // superseded by an interruption below
         pendingRef.current = Math.max(0, pendingRef.current - 1);
+        const idx = pendingTextsRef.current.indexOf(clean);
+        if (idx !== -1) pendingTextsRef.current.splice(idx, 1);
         if (pendingRef.current === 0) setSpeaking(false);
       };
       utterance.onend = done;
@@ -171,11 +162,42 @@ export function useSpeechSynthesis(lang = "en-US") {
     [lang]
   );
 
+  const setGender = useCallback(
+    (next: VoiceGender) => {
+      genderRef.current = next;
+      setGenderState(next);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(GENDER_STORAGE_KEY, next);
+      }
+      reselect();
+
+      // Whatever was queued/playing gets cut off by cancel() below — capture
+      // it so we can replay it in the new voice instead of silently dropping
+      // the rest of what the interviewer was saying.
+      const interrupted = pendingTextsRef.current.slice();
+      pendingTextsRef.current = [];
+      pendingRef.current = 0;
+      genRef.current += 1; // invalidate in-flight onend/onerror from the old voice
+      setSpeaking(false);
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      if (interrupted.length) {
+        // A couple of browsers drop a speak() called in the same tick as
+        // cancel(); a tiny delay makes the resume reliable.
+        setTimeout(() => interrupted.forEach((text) => speak(text)), 50);
+      }
+    },
+    [reselect, speak]
+  );
+
   const cancel = useCallback(() => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
+    pendingTextsRef.current = [];
     pendingRef.current = 0;
+    genRef.current += 1;
     setSpeaking(false);
   }, []);
 
