@@ -56,7 +56,7 @@ export function Roadmap({
             className="rounded-lg border px-4"
           >
             <AccordionTrigger className="hover:no-underline">
-              <div className="flex w-full items-center gap-4 pr-2">
+              <div className="flex min-w-0 flex-1 items-center gap-4 pr-2">
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-full border text-sm font-semibold">
                   {levelIdx + 1}
                 </div>
