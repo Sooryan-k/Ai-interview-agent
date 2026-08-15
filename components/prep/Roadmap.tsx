@@ -67,7 +67,7 @@ export function Roadmap({
                       <Badge variant="secondary">You are here</Badge>
                     )}
                   </div>
-                  <p className="truncate text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {level.summary}
                   </p>
                 </div>
@@ -113,11 +113,11 @@ export function Roadmap({
                         <li key={topic.key}>
                           <Link
                             href={`/prep/topic/${topic.key}?c=${curriculumId}`}
-                            className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-accent"
+                            className="flex items-start gap-3 rounded-md p-2 transition-colors hover:bg-accent"
                           >
                             <span
                               className={cn(
-                                "size-2 shrink-0 rounded-full",
+                                "mt-1.5 size-2 shrink-0 rounded-full",
                                 STATUS_DOT[status]
                               )}
                             />
@@ -125,11 +125,11 @@ export function Roadmap({
                               <span className="block text-sm">
                                 {topic.title}
                               </span>
-                              <span className="block truncate text-xs text-muted-foreground">
+                              <span className="block text-xs text-muted-foreground">
                                 {topic.objective}
                               </span>
                             </span>
-                            <span className="shrink-0 text-xs text-muted-foreground">
+                            <span className="mt-0.5 shrink-0 text-xs text-muted-foreground">
                               ~{topic.est_minutes}m
                             </span>
                           </Link>

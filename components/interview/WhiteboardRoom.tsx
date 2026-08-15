@@ -165,7 +165,7 @@ export function WhiteboardRoom({ question }: { question: string }) {
         <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-3 px-4 sm:px-6 py-2.5">
           <div className="min-w-0 flex-1">
             <p className="text-xs text-muted-foreground">Design this — then submit for AI critique</p>
-            <p className="truncate text-sm font-medium">{question}</p>
+            <p className="text-sm font-medium">{question}</p>
           </div>
           <Button onClick={submit} disabled={submitting} className="shrink-0">
             {submitting ? "Grading your diagram…" : "Submit design →"}
