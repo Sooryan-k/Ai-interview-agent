@@ -121,7 +121,7 @@ const INTERVIEW: Feature[] = [
   {
     icon: BadgeDollarSign,
     title: "Salary negotiation simulator",
-    desc: "Practice the offer conversation against a recruiter persona with a hidden budget. Learn to anchor a number, hold silence after asking, and not leave money on the table — before it's a real offer.",
+    desc: "Practice the offer conversation against a recruiter persona with a hidden budget, in your currency of choice (USD, EUR, GBP, INR and more). Learn to anchor a number, hold silence after asking, and not leave money on the table — before it's a real offer.",
     href: "/interview/new",
   },
 ];

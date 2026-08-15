@@ -7,6 +7,7 @@ import { DisplayNameForm } from "@/components/settings/DisplayNameForm";
 import { UsernameForm } from "@/components/settings/UsernameForm";
 import { ResumeUpload } from "@/components/settings/ResumeUpload";
 import { NotificationToggle } from "@/components/settings/NotificationToggle";
+import { VoicePicker } from "@/components/interview/VoicePicker";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -90,11 +91,14 @@ export default async function SettingsPage() {
           <CardHeader>
             <CardTitle className="text-base">Voice</CardTitle>
             <CardDescription>
-              The interviewer voice (male/female) is chosen from the toggle
-              inside the interview room and remembered on this device. Best
-              voices are in Chrome/Edge.
+              Pick and preview the interviewer voice. Remembered on this
+              device — carries over to every interview. Best voices are in
+              Chrome/Edge.
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <VoicePicker />
+          </CardContent>
         </Card>
       </PageShell>
     </>

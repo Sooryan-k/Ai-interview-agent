@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { consumeQuota, userInterviewCheck } from "@/lib/quota";
 import { CurriculumSchema } from "@/lib/schemas";
+import { DEFAULT_CURRENCY, isCurrencyCode } from "@/lib/currency";
 
 const ROUND_TYPES = new Set([
   "behavioral",
@@ -45,6 +46,9 @@ export async function POST(request: Request) {
     typeof body?.jdText === "string" ? body.jdText.slice(0, 4000) : null;
   const barRaiser = body?.barRaiser === true;
   const panel = body?.panel === true;
+  const currency = isCurrencyCode(body?.currency)
+    ? body.currency
+    : DEFAULT_CURRENCY;
   let roleTrack =
     typeof body?.roleTrack === "string" && body.roleTrack.trim()
       ? body.roleTrack.trim().slice(0, 80)
@@ -89,6 +93,7 @@ export async function POST(request: Request) {
     question_count: QUESTIONS_BY_DIFFICULTY[difficulty],
     bar_raiser: barRaiser,
     panel,
+    ...(roundType === "negotiation" ? { currency } : {}),
   };
 
   const { data: interview, error } = await supabase

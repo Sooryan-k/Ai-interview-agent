@@ -112,6 +112,7 @@ export async function POST(
     question_count?: number;
     bar_raiser?: boolean;
     panel?: boolean;
+    currency?: string;
   };
 
   let topicScope: { title: string; objective: string }[] | undefined;
@@ -175,6 +176,7 @@ export async function POST(
     stories: stories.length ? stories : undefined,
     barRaiser: persona.bar_raiser === true,
     panel: persona.panel === true,
+    currency: persona.currency,
   });
   const prompt = transcriptPrompt(history, answer ?? undefined, hint);
 

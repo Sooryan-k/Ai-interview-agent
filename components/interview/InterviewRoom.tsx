@@ -46,6 +46,7 @@ export function InterviewRoom({
   roundType,
   difficulty,
   questionCount,
+  currency,
 }: {
   interviewId: string;
   initialTurns: Turn[];
@@ -55,6 +56,7 @@ export function InterviewRoom({
   roundType: string;
   difficulty: string;
   questionCount: number;
+  currency?: string;
 }) {
   const router = useRouter();
   const [turns, setTurns] = useState<Turn[]>(initialTurns);
@@ -289,6 +291,7 @@ export function InterviewRoom({
           <span className="text-muted-foreground">· {roleTrack}</span>
           <Badge variant="outline">{roundType.replace("_", " ")}</Badge>
           <Badge variant="outline">{difficulty}</Badge>
+          {currency && <Badge variant="outline">{currency}</Badge>}
           <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
             <span className="text-xs text-muted-foreground tabular-nums">
               Q {Math.min(aiTurnCount, questionCount)}/{questionCount}

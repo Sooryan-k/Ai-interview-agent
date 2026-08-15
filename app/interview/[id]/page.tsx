@@ -39,6 +39,7 @@ export default async function InterviewPage({
   const persona = (interview.persona ?? {}) as {
     interviewer_name?: string;
     question_count?: number;
+    currency?: string;
   };
 
   return (
@@ -53,6 +54,7 @@ export default async function InterviewPage({
         roundType={interview.round_type}
         difficulty={interview.difficulty}
         questionCount={persona.question_count ?? 6}
+        currency={persona.currency}
       />
     </>
   );

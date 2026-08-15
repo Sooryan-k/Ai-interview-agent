@@ -20,8 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Flame, Users } from "lucide-react";
+import { BadgeDollarSign, Flame, Mic, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currency";
+import { VoicePicker } from "@/components/interview/VoicePicker";
 import { toast } from "sonner";
 
 const ROUNDS = [
@@ -49,6 +51,7 @@ export function NewInterviewForm({
   const [roundType, setRoundType] = useState("technical");
   const [difficulty, setDifficulty] = useState("medium");
   const [jdText, setJdText] = useState("");
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
   const [barRaiser, setBarRaiser] = useState(false);
   const [panel, setPanel] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -70,6 +73,7 @@ export function NewInterviewForm({
           curriculumId,
           level,
           jdText: jdText.trim() || undefined,
+          currency: roundType === "negotiation" ? currency : undefined,
           barRaiser,
           panel,
         }),
@@ -148,6 +152,44 @@ export function NewInterviewForm({
             </Select>
           </div>
         </div>
+
+        <div className="space-y-1.5">
+          <Label className="flex items-center gap-1.5">
+            <Mic className="size-4 text-primary" /> Interviewer voice
+          </Label>
+          <VoicePicker />
+          <p className="text-xs text-muted-foreground">
+            Remembered on this device — change it anytime from the interview
+            room or Settings.
+          </p>
+        </div>
+
+        {roundType === "negotiation" && (
+          <div className="space-y-1.5">
+            <Label className="flex items-center gap-1.5">
+              <BadgeDollarSign className="size-4 text-primary" /> Currency
+            </Label>
+            <Select
+              value={currency}
+              onValueChange={(v) => v && setCurrency(v as typeof currency)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCIES.map((c) => (
+                  <SelectItem key={c.code} value={c.code}>
+                    {c.symbol} {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              The offer, counters and every figure the recruiter mentions will
+              be in this currency.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-1.5">
           <Label htmlFor="jd">

@@ -14,6 +14,7 @@ export interface InterviewerConfig {
   stories?: { title: string; polished: string }[];
   barRaiser?: boolean;
   panel?: boolean;
+  currency?: string;
 }
 
 const ROUND_STYLE: Record<string, string> = {
@@ -34,6 +35,13 @@ export function interviewerSystemPrompt(cfg: InterviewerConfig): string {
 
   sections.push(`You are ${cfg.interviewerName}, an experienced ${cfg.roleTrack} interviewer running a realistic ${cfg.difficulty}-difficulty mock interview round.
 ${ROUND_STYLE[cfg.roundType] ?? ROUND_STYLE.technical}`);
+
+  if (cfg.roundType === "negotiation") {
+    const currency = cfg.currency ?? "USD";
+    sections.push(
+      `CURRENCY: negotiate entirely in ${currency}. Every figure you say — the initial offer, base salary, bonus, any number at all — must be in ${currency}. Never switch currencies or convert to another one, even if the candidate does.`
+    );
+  }
 
   if (cfg.barRaiser) {
     sections.push(`BAR-RAISER MODE: You are a notoriously demanding "bar raiser". Hold an exceptionally high standard. Probe relentlessly for depth, challenge vague or buzzword answers, ask "why" and "what are the trade-offs" until you hit bedrock, and don't let the candidate off the hook. Stay professional and never rude — the pressure comes from rigor, not hostility. Score strictly.`);
