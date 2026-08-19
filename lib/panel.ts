@@ -33,16 +33,18 @@ export function stripSpeakerTag(text: string, isPanel: boolean): string {
   return isPanel ? text.replace(PARTIAL_SPEAKER_TAG, "") : text;
 }
 
-// The three personas the panel prompt defines, matched to their role.
+// People, not role objects — an avatar should look like a person. The three
+// personas the panel prompt defines get a fixed face each; Dana is a unisex
+// name, so it takes the third distinct face rather than implying anything.
 const KNOWN: Record<string, string> = {
-  priya: "📋", // engineering manager
-  marcus: "💻", // senior engineer
-  dana: "🔍", // bar raiser
+  priya: "👩",
+  marcus: "👨",
+  dana: "🧔",
 };
 
 // Fallback pool, in case the model invents a name. Deterministic per name so a
 // panelist keeps the same face for the whole interview.
-const POOL = ["💬", "🗣️", "🧑", "👤", "🎧", "📎"];
+const POOL = ["👩", "👨", "🧔"];
 
 export function panelistEmoji(name: string): string {
   const key = name.trim().toLowerCase();

@@ -396,6 +396,12 @@ function main() {
     panelistEmoji("Jordan") === panelistEmoji("Jordan") &&
       panelistEmoji("Jordan").length > 0
   );
+  check(
+    "panel: avatars are people, never role objects",
+    ["Priya", "Marcus", "Dana", "Jordan", "Sam"].every((n) =>
+      ["👩", "👨", "🧔"].includes(panelistEmoji(n))
+    )
+  );
 
   // ---- interviewer name is not exposed ----
   const named = interviewerSystemPrompt({
