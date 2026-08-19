@@ -383,23 +383,25 @@ function main() {
     stripSpeakerTag("[1] First point.", false) === "[1] First point."
   );
   check(
-    "panel: each panelist keeps a stable, distinct emoji",
-    panelistEmoji("Priya") === panelistEmoji("priya") &&
-      new Set([
-        panelistEmoji("Priya"),
-        panelistEmoji("Marcus"),
-        panelistEmoji("Dana"),
-      ]).size === 3
+    "panel: female personas get the female face",
+    ["Priya", "Dana", "Sofia", "Amara"].every(
+      (n) => panelistEmoji(n) === "👩"
+    )
   );
   check(
-    "panel: an unknown name still gets a stable emoji",
-    panelistEmoji("Jordan") === panelistEmoji("Jordan") &&
-      panelistEmoji("Jordan").length > 0
+    "panel: everyone else gets the male face",
+    ["Marcus", "Ken", "Alex", "Jordan"].every(
+      (n) => panelistEmoji(n) === "👨"
+    )
   );
   check(
-    "panel: avatars are people, never role objects",
-    ["Priya", "Marcus", "Dana", "Jordan", "Sam"].every((n) =>
-      ["👩", "👨", "🧔"].includes(panelistEmoji(n))
+    "panel: matching is case-insensitive and space-tolerant",
+    panelistEmoji(" priya ") === "👩" && panelistEmoji("PRIYA") === "👩"
+  );
+  check(
+    "panel: only ever a person emoji, never a role object",
+    ["Priya", "Marcus", "Dana", "Jordan"].every((n) =>
+      ["👩", "👨"].includes(panelistEmoji(n))
     )
   );
 

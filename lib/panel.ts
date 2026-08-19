@@ -33,23 +33,14 @@ export function stripSpeakerTag(text: string, isPanel: boolean): string {
   return isPanel ? text.replace(PARTIAL_SPEAKER_TAG, "") : text;
 }
 
-// People, not role objects — an avatar should look like a person. The three
-// personas the panel prompt defines get a fixed face each; Dana is a unisex
-// name, so it takes the third distinct face rather than implying anything.
-const KNOWN: Record<string, string> = {
-  priya: "👩",
-  marcus: "👨",
-  dana: "🧔",
-};
-
-// Fallback pool, in case the model invents a name. Deterministic per name so a
-// panelist keeps the same face for the whole interview.
-const POOL = ["👩", "👨", "🧔"];
+/**
+ * The interviewer personas this app creates, so the avatar matches the name
+ * rather than guessing. Everything else falls through to the male face —
+ * these are the only names the prompts ever produce (panel personas plus the
+ * solo interviewer pool), so there is no open-ended name guessing here.
+ */
+const FEMALE_PERSONAS = new Set(["priya", "dana", "sofia", "amara"]);
 
 export function panelistEmoji(name: string): string {
-  const key = name.trim().toLowerCase();
-  if (KNOWN[key]) return KNOWN[key];
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) | 0;
-  return POOL[Math.abs(hash) % POOL.length];
+  return FEMALE_PERSONAS.has(name.trim().toLowerCase()) ? "👩" : "👨";
 }
