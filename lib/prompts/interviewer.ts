@@ -226,7 +226,8 @@ End the message with the exact line ${END_MARKER}. Follow the output protocol fo
 
 Do all of this in one message:
 1. One short, matter-of-fact lead-in sentence. No reassurance speech, no lecturing about not knowing it.
-2. The answer itself, wrapped EXACTLY like this: ${ANSWER_OPEN}the answer${ANSWER_CLOSE}
+2. The answer itself, wrapped in tags EXACTLY like this: ${ANSWER_OPEN}the answer${ANSWER_CLOSE}
+   - Copy both tags character for character. The closing tag is ${ANSWER_CLOSE} — with the slash inside the angle brackets. Getting this wrong shows the raw tags to the candidate.
    - Keep it to the SHORTEST answer that would actually satisfy an interviewer: 2-3 sentences, ideally under 45 words. Lead with the direct answer, then at most one clause of why it matters.
    - No padding, no restating the question, no "as I mentioned". Dense and memorable — this is the bit they will re-read.
    - Plain spoken prose only (it is read aloud): no markdown, no bullets, no code blocks.

@@ -272,6 +272,40 @@ function main() {
     stripAnswerMarkers("Use arr[0] here.") === "Use arr[0] here."
   );
 
+  // Models mangle the closer in practice; these are variants seen in the wild
+  // plus the legacy bracket markers already sitting in stored transcripts.
+  const variants: [string, string][] = [
+    ["mangled closer [/A]] (observed)", "Lead. [[A]]The answer.[/A]] Next?"],
+    ["legacy bracket pair", "Lead. [[A]]The answer.[[/A]] Next?"],
+    ["spelled-out tags", "Lead. [[ANSWER]]The answer.[[/ANSWER]] Next?"],
+    ["lowercase xml", "Lead. <ans>The answer.</ans> Next?"],
+    ["spaced xml", "Lead. < ANS >The answer.< / ANS > Next?"],
+  ];
+  for (const [label, raw] of variants) {
+    const s = splitAnswerSegments(raw);
+    const answer = s.find((x) => x.isAnswer);
+    check(
+      `markers: recovers from ${label}`,
+      answer?.text === "The answer." && s.length === 3,
+      JSON.stringify(s)
+    );
+    check(
+      `strip: removes ${label}`,
+      !/\[\[|\]\]|<\s*\/?\s*ans/i.test(stripAnswerMarkers(raw)),
+      stripAnswerMarkers(raw)
+    );
+  }
+
+  check(
+    "strip: hides a partial xml tag at the stream tail",
+    stripAnswerMarkers("Sure. <") === "Sure. " &&
+      stripAnswerMarkers("Sure. </AN") === "Sure. "
+  );
+  check(
+    "strip: does not eat a real comparison operator mid-sentence",
+    stripAnswerMarkers("Use a < b to compare.") === "Use a < b to compare."
+  );
+
   // ---- early-finish sign-off ----
   const wrapTurn = transcriptPrompt(history, undefined, { wrapUp: true });
   check(

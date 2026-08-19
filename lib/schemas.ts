@@ -154,11 +154,28 @@ export const END_MARKER = "[END_OF_INTERVIEW]";
 
 /**
  * Wraps the core answer inside a "show me the answer" reply, so the UI can
- * highlight just that part and leave the surrounding chatter plain. Kept short
- * and bracket-based so a half-streamed marker is easy to detect and hide.
+ * highlight just that part and leave the surrounding chatter plain.
+ *
+ * XML-style tags on purpose: the previous "[[A]] … [[/A]]" pair was emitted
+ * with a mangled closer ("[/A]]") often enough to break parsing, because the
+ * "[[/" sequence is awkward to reproduce. Models close an XML tag reliably.
  */
-export const ANSWER_OPEN = "[[A]]";
-export const ANSWER_CLOSE = "[[/A]]";
+export const ANSWER_OPEN = "<ANS>";
+export const ANSWER_CLOSE = "</ANS>";
+
+// Close first: "[[/A]]" must not be mistaken for an opening "[[A]]".
+const CLOSE_VARIANTS = /<\s*\/\s*ans\s*>|\[\[?\s*\/\s*(?:a|ans|answer)\s*\]\]/gi;
+const OPEN_VARIANTS = /<\s*ans\s*>|\[\[\s*(?:a|ans|answer)\s*\]\]/gi;
+
+/**
+ * Repairs near-miss markers before parsing. Also lets transcripts recorded
+ * with the old bracket markers keep rendering correctly.
+ */
+function normalizeMarkers(text: string): string {
+  return text
+    .replace(CLOSE_VARIANTS, ANSWER_CLOSE)
+    .replace(OPEN_VARIANTS, ANSWER_OPEN);
+}
 
 /**
  * Strips answer markers for contexts that must never show them — speech
@@ -167,12 +184,14 @@ export const ANSWER_CLOSE = "[[/A]]";
  * on screen or get read aloud.
  */
 export function stripAnswerMarkers(text: string): string {
-  return text
+  return normalizeMarkers(text)
     .split(ANSWER_OPEN)
     .join("")
     .split(ANSWER_CLOSE)
     .join("")
-    .replace(/\[\[?\/?A?\]?\]?$/, "");
+    // A tag still arriving at the tail of an in-flight stream ("<", "</AN"…).
+    .replace(/<\/?[A-Za-z]*$/, "")
+    .replace(/\[{1,2}\/?[A-Za-z]*\]?$/, "");
 }
 
 export interface AnswerSegment {
@@ -187,7 +206,7 @@ export interface AnswerSegment {
  */
 export function splitAnswerSegments(text: string): AnswerSegment[] {
   const segments: AnswerSegment[] = [];
-  let rest = text;
+  let rest = normalizeMarkers(text);
 
   for (;;) {
     const open = rest.indexOf(ANSWER_OPEN);
