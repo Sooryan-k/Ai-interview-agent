@@ -93,13 +93,19 @@ export function useSpeechSynthesis(lang = "en-US") {
   const pendingRef = useRef(0);
   const pendingTextsRef = useRef<string[]>([]); // queued/playing utterance text, in order
   const genRef = useRef(0); // bumped on any interruption, so stale onend/onerror callbacks no-op
-  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  // Both voices are kept resolved, not just the selected one: panel rounds
+  // switch voice per speaker mid-interview, so there's no single "current" one.
+  const voiceByGenderRef = useRef<
+    Record<VoiceGender, SpeechSynthesisVoice | null>
+  >({ female: null, male: null });
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
   const genderRef = useRef<VoiceGender>("female");
 
   const reselect = useCallback(() => {
-    const best = pickVoice(voicesRef.current, lang, genderRef.current);
-    if (best) voiceRef.current = best;
+    const female = pickVoice(voicesRef.current, lang, "female");
+    const male = pickVoice(voicesRef.current, lang, "male");
+    if (female) voiceByGenderRef.current.female = female;
+    if (male) voiceByGenderRef.current.male = male;
   }, [lang]);
 
   useEffect(() => {
@@ -129,19 +135,25 @@ export function useSpeechSynthesis(lang = "en-US") {
   }, [reselect]);
 
   const speak = useCallback(
-    (text: string) => {
+    /**
+     * `as` overrides the listener's chosen voice for this utterance — panel
+     * rounds use it so each interviewer sounds like themselves.
+     */
+    (text: string, as?: VoiceGender) => {
       if (!enabledRef.current) return;
       if (typeof window === "undefined" || !("speechSynthesis" in window))
         return;
       const clean = text.trim();
       if (!clean) return;
 
+      const gender = as ?? genderRef.current;
+      const voice = voiceByGenderRef.current[gender];
       const utterance = new SpeechSynthesisUtterance(clean);
-      if (voiceRef.current) utterance.voice = voiceRef.current;
-      utterance.lang = voiceRef.current?.lang ?? lang;
+      if (voice) utterance.voice = voice;
+      utterance.lang = voice?.lang ?? lang;
       // Calm, human cadence; nudge pitch by gender for a clearer distinction.
       utterance.rate = 0.95;
-      utterance.pitch = genderRef.current === "male" ? 0.9 : 1.05;
+      utterance.pitch = gender === "male" ? 0.9 : 1.05;
       utterance.volume = 1.0;
 
       const myGen = genRef.current;

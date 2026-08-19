@@ -55,6 +55,12 @@ const FEMALE_PERSONAS = new Set([
   "shreya",
 ]);
 
+export type PanelistGender = "female" | "male";
+
+export function panelistGender(name: string): PanelistGender {
+  return FEMALE_PERSONAS.has(name.trim().toLowerCase()) ? "female" : "male";
+}
+
 export function panelistEmoji(name: string): string {
-  return FEMALE_PERSONAS.has(name.trim().toLowerCase()) ? "👩" : "👨";
+  return panelistGender(name) === "female" ? "👩" : "👨";
 }

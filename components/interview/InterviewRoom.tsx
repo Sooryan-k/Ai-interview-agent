@@ -27,7 +27,12 @@ import {
   splitAnswerSegments,
   stripAnswerMarkers,
 } from "@/lib/schemas";
-import { panelistEmoji, splitSpeakerTag, stripSpeakerTag } from "@/lib/panel";
+import {
+  panelistEmoji,
+  panelistGender,
+  splitSpeakerTag,
+  stripSpeakerTag,
+} from "@/lib/panel";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -97,21 +102,24 @@ export function InterviewRoom({
   // ---- streaming a turn from the server ----
   const speakNewSentences = useCallback(
     (text: string, flush: boolean) => {
+      const withoutMarkers = stripAnswerMarkers(text.replace(END_MARKER, ""));
       // Markers and the panel speaker tag are UI-only — never read them aloud.
-      const clean = stripSpeakerTag(
-        stripAnswerMarkers(text.replace(END_MARKER, "")),
-        panel
-      );
+      const clean = stripSpeakerTag(withoutMarkers, panel);
+      // On a panel, each interviewer speaks in their own voice rather than the
+      // single one the listener picked.
+      const speaker = panel ? splitSpeakerTag(withoutMarkers).speaker : null;
+      const voice = speaker ? panelistGender(speaker) : undefined;
+
       const pending = clean.slice(spokenUpToRef.current);
       if (flush) {
-        if (pending.trim()) speak(pending);
+        if (pending.trim()) speak(pending, voice);
         spokenUpToRef.current = clean.length;
         return;
       }
       // Speak completed sentences as they arrive.
       const match = pending.match(/^[\s\S]*[.!?](?=\s|$)/);
       if (match && match[0].trim()) {
-        speak(match[0]);
+        speak(match[0], voice);
         spokenUpToRef.current += match[0].length;
       }
     },
@@ -357,7 +365,9 @@ export function InterviewRoom({
                       : "Unmute — hear the interviewer speak"}
                   </TooltipContent>
                 </Tooltip>
-                {tts.enabled && (
+                {/* Panel rounds pick the voice per speaker, so a manual
+                    male/female choice would have nothing to act on. */}
+                {tts.enabled && !panel && (
                   <span className="flex overflow-hidden rounded-md border text-xs">
                     <Tooltip>
                       <TooltipTrigger

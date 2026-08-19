@@ -13,7 +13,12 @@ import {
   per100Words,
 } from "@/lib/speech/delivery";
 import { parseRepoRef } from "@/lib/github";
-import { panelistEmoji, splitSpeakerTag, stripSpeakerTag } from "@/lib/panel";
+import {
+  panelistEmoji,
+  panelistGender,
+  splitSpeakerTag,
+  stripSpeakerTag,
+} from "@/lib/panel";
 import {
   interviewerSystemPrompt,
   transcriptPrompt,
@@ -397,6 +402,14 @@ function main() {
   check(
     "panel: matching is case-insensitive and space-tolerant",
     panelistEmoji(" priya ") === "👩" && panelistEmoji("PRIYA") === "👩"
+  );
+  check(
+    "panel: voice gender matches the avatar for every persona",
+    (["Priya", "Arjun", "Meera", "Aarav"] as const).every((n) =>
+      panelistEmoji(n) === "👩"
+        ? panelistGender(n) === "female"
+        : panelistGender(n) === "male"
+    )
   );
   check(
     "panel: only ever a person emoji, never a role object",

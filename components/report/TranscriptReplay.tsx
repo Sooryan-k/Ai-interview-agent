@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { stripAnswerMarkers } from "@/lib/schemas";
+import { splitSpeakerTag } from "@/lib/panel";
 
 /**
  * Re-speaks the interview transcript via the browser TTS (zero cost).
@@ -37,10 +38,16 @@ export function TranscriptReplay({
     }
     idxRef.current = i;
     const t = turns[i];
-    const prefix = t.speaker === "ai" ? "Interviewer says. " : "You answered. ";
-    const u = new SpeechSynthesisUtterance(
-      prefix + stripAnswerMarkers(t.text)
-    );
+    // Panel transcripts carry a "[Priya]" speaker tag — announce the name
+    // instead of spelling the brackets out.
+    const { speaker, body } = splitSpeakerTag(stripAnswerMarkers(t.text));
+    const prefix =
+      t.speaker !== "ai"
+        ? "You answered. "
+        : speaker
+          ? `${speaker} says. `
+          : "Interviewer says. ";
+    const u = new SpeechSynthesisUtterance(prefix + body);
     u.rate = 1.0;
     u.onend = () => {
       // Only advance if we weren't stopped.
