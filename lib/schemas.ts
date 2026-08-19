@@ -151,3 +151,57 @@ export type CodeReview = z.infer<typeof CodeReviewSchema>;
 // ---------- Wire protocol constants ----------
 export const EVAL_SENTINEL = "<<<EVAL>>>";
 export const END_MARKER = "[END_OF_INTERVIEW]";
+
+/**
+ * Wraps the core answer inside a "show me the answer" reply, so the UI can
+ * highlight just that part and leave the surrounding chatter plain. Kept short
+ * and bracket-based so a half-streamed marker is easy to detect and hide.
+ */
+export const ANSWER_OPEN = "[[A]]";
+export const ANSWER_CLOSE = "[[/A]]";
+
+/**
+ * Strips answer markers for contexts that must never show them — speech
+ * synthesis and the live streaming view. Also removes a partial marker left
+ * at the tail of an in-flight stream (e.g. "[[" or "[[/A") so it can't flash
+ * on screen or get read aloud.
+ */
+export function stripAnswerMarkers(text: string): string {
+  return text
+    .split(ANSWER_OPEN)
+    .join("")
+    .split(ANSWER_CLOSE)
+    .join("")
+    .replace(/\[\[?\/?A?\]?\]?$/, "");
+}
+
+export interface AnswerSegment {
+  text: string;
+  isAnswer: boolean;
+}
+
+/**
+ * Splits a message into plain and answer segments for rendering. An
+ * unterminated marker degrades to plain text rather than swallowing the rest
+ * of the message, so a malformed model response still reads correctly.
+ */
+export function splitAnswerSegments(text: string): AnswerSegment[] {
+  const segments: AnswerSegment[] = [];
+  let rest = text;
+
+  for (;;) {
+    const open = rest.indexOf(ANSWER_OPEN);
+    if (open === -1) break;
+    const close = rest.indexOf(ANSWER_CLOSE, open + ANSWER_OPEN.length);
+    if (close === -1) break;
+    if (open > 0) segments.push({ text: rest.slice(0, open), isAnswer: false });
+    segments.push({
+      text: rest.slice(open + ANSWER_OPEN.length, close).trim(),
+      isAnswer: true,
+    });
+    rest = rest.slice(close + ANSWER_CLOSE.length);
+  }
+
+  if (rest) segments.push({ text: rest, isAnswer: false });
+  return segments;
+}

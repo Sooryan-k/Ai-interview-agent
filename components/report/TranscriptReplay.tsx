@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { stripAnswerMarkers } from "@/lib/schemas";
 
 /**
  * Re-speaks the interview transcript via the browser TTS (zero cost).
@@ -37,7 +38,9 @@ export function TranscriptReplay({
     idxRef.current = i;
     const t = turns[i];
     const prefix = t.speaker === "ai" ? "Interviewer says. " : "You answered. ";
-    const u = new SpeechSynthesisUtterance(prefix + t.text);
+    const u = new SpeechSynthesisUtterance(
+      prefix + stripAnswerMarkers(t.text)
+    );
     u.rate = 1.0;
     u.onend = () => {
       // Only advance if we weren't stopped.

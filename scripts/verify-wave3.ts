@@ -18,7 +18,13 @@ import {
   transcriptPrompt,
 } from "@/lib/prompts/interviewer";
 import { reportPrompt } from "@/lib/prompts/report";
-import { EvalSchema } from "@/lib/schemas";
+import {
+  EvalSchema,
+  ANSWER_OPEN,
+  ANSWER_CLOSE,
+  splitAnswerSegments,
+  stripAnswerMarkers,
+} from "@/lib/schemas";
 import { aggregateDelivery, type EvalTurnRow } from "@/lib/analytics";
 
 let failures = 0;
@@ -164,7 +170,10 @@ function main() {
     { speaker: "ai", text: "What is a React key?" },
   ];
   const revealTurn = transcriptPrompt(history, undefined, { reveal: true });
-  check("reveal: teaches the answer", /Teach the answer properly/.test(revealTurn));
+  check(
+    "reveal: gives the answer rather than withholding it",
+    /The answer itself/.test(revealTurn)
+  );
   check(
     "reveal: advances to the next question",
     /ask your NEXT question/.test(revealTurn)
@@ -175,7 +184,7 @@ function main() {
   );
   check(
     "reveal: stays speakable (no markdown in the spoken answer)",
-    /no markdown, no bullets and no code blocks/.test(revealTurn)
+    /no markdown, no bullets, no code blocks/.test(revealTurn)
   );
 
   const hintTurn = transcriptPrompt(history, undefined, { hint: true });
@@ -191,6 +200,60 @@ function main() {
     "reveal and hint are distinct prompts",
     revealTurn !== hintTurn &&
       !/do not advance to a new question/.test(revealTurn)
+  );
+
+  check(
+    "reveal: asks for the shortest satisfying answer",
+    /SHORTEST answer/.test(revealTurn) && /under 45 words/.test(revealTurn)
+  );
+  check(
+    "reveal: marks only the answer, not the lead-in or next question",
+    revealTurn.includes(ANSWER_OPEN) &&
+      revealTurn.includes(ANSWER_CLOSE) &&
+      /ONLY the answer between the markers/.test(revealTurn)
+  );
+
+  // ---- answer-marker parsing ----
+  const marked = `Sure. ${ANSWER_OPEN}A key helps React match items.${ANSWER_CLOSE} Next: what is state?`;
+  const segs = splitAnswerSegments(marked);
+  check("markers: splits into three segments", segs.length === 3);
+  check(
+    "markers: highlights only the answer",
+    segs[1].isAnswer &&
+      segs[1].text === "A key helps React match items." &&
+      !segs[0].isAnswer &&
+      !segs[2].isAnswer
+  );
+  check(
+    "markers: reassembles to the original words",
+    segs.map((s) => s.text).join(" ").replace(/\s+/g, " ").trim() ===
+      "Sure. A key helps React match items. Next: what is state?"
+  );
+  check(
+    "markers: plain text passes through untouched",
+    splitAnswerSegments("just a question?").length === 1 &&
+      splitAnswerSegments("just a question?")[0].isAnswer === false
+  );
+  check(
+    "markers: unterminated marker degrades to plain text, keeps the words",
+    (() => {
+      const s = splitAnswerSegments(`Sure. ${ANSWER_OPEN}half arrived`);
+      return s.every((x) => !x.isAnswer) && s.map((x) => x.text).join("").includes("half arrived");
+    })()
+  );
+
+  check(
+    "strip: removes complete markers for speech",
+    stripAnswerMarkers(marked) === "Sure. A key helps React match items. Next: what is state?"
+  );
+  check(
+    "strip: hides a partial marker at the stream tail",
+    stripAnswerMarkers("Sure. [[") === "Sure. " &&
+      stripAnswerMarkers("Sure. [[/A") === "Sure. "
+  );
+  check(
+    "strip: leaves ordinary brackets alone",
+    stripAnswerMarkers("Use arr[0] here.") === "Use arr[0] here."
   );
 
   const plainTurn = transcriptPrompt(history, "my answer");

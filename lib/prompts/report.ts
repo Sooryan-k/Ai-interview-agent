@@ -1,3 +1,5 @@
+import { stripAnswerMarkers } from "@/lib/schemas";
+
 interface ReportTurn {
   speaker: string;
   text: string;
@@ -27,7 +29,8 @@ export function reportPrompt(args: {
 }): string {
   const transcript = args.turns
     .map((t) => {
-      const line = `${t.speaker === "ai" ? "INTERVIEWER" : "CANDIDATE"}: ${t.text}`;
+      // Answer-highlight markers are a UI concern; keep them out of the model's view.
+      const line = `${t.speaker === "ai" ? "INTERVIEWER" : "CANDIDATE"}: ${stripAnswerMarkers(t.text)}`;
       if (!t.eval) return line;
       const rung =
         typeof t.eval.depth === "number" ? ` — rung ${t.eval.depth}` : "";

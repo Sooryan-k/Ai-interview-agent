@@ -1,4 +1,9 @@
-import { EVAL_SENTINEL, END_MARKER } from "@/lib/schemas";
+import {
+  EVAL_SENTINEL,
+  END_MARKER,
+  ANSWER_OPEN,
+  ANSWER_CLOSE,
+} from "@/lib/schemas";
 
 export interface InterviewerConfig {
   roleTrack: string;
@@ -198,11 +203,15 @@ export function transcriptPrompt(
     return `${transcript}\n\nThe candidate could not answer the CURRENT question and has asked to SEE the answer so they can learn it.
 
 Do all of this in one message:
-1. Say briefly and without judgement that you'll walk them through it (one short sentence — no lecturing about not knowing).
-2. Teach the answer properly: what the right answer is, WHY it's right, and the one detail interviewers most want to hear. Aim for 3-6 sentences of plain spoken prose — this is the part they're here to learn from, so make it genuinely useful, but it will be read aloud so use no markdown, no bullets and no code blocks.
-3. Then ask your NEXT question and continue the interview normally. This counts as a new question.
+1. One short, matter-of-fact lead-in sentence. No reassurance speech, no lecturing about not knowing it.
+2. The answer itself, wrapped EXACTLY like this: ${ANSWER_OPEN}the answer${ANSWER_CLOSE}
+   - Keep it to the SHORTEST answer that would actually satisfy an interviewer: 2-3 sentences, ideally under 45 words. Lead with the direct answer, then at most one clause of why it matters.
+   - No padding, no restating the question, no "as I mentioned". Dense and memorable — this is the bit they will re-read.
+   - Plain spoken prose only (it is read aloud): no markdown, no bullets, no code blocks.
+   - Put ONLY the answer between the markers — not the lead-in, not the next question.
+3. Then ask your NEXT question, outside the markers. This counts as a new question.
 
-Because they never answered, output null for the eval JSON instead of an object.`;
+Use the ${ANSWER_OPEN} / ${ANSWER_CLOSE} markers exactly once, and only in this message. Because they never answered, output null for the eval JSON instead of an object.`;
   }
   return `${transcript}\n\nProduce your next interviewer message now, following the output protocol exactly.`;
 }

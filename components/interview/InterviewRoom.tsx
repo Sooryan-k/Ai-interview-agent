@@ -22,7 +22,11 @@ import {
   type SpeechMetrics,
 } from "@/lib/speech/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/lib/speech/useSpeechSynthesis";
-import { END_MARKER } from "@/lib/schemas";
+import {
+  END_MARKER,
+  splitAnswerSegments,
+  stripAnswerMarkers,
+} from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -89,7 +93,8 @@ export function InterviewRoom({
   // ---- streaming a turn from the server ----
   const speakNewSentences = useCallback(
     (text: string, flush: boolean) => {
-      const clean = text.replace(END_MARKER, "");
+      // Markers are UI-only — never read them aloud.
+      const clean = stripAnswerMarkers(text.replace(END_MARKER, ""));
       const pending = clean.slice(spokenUpToRef.current);
       if (flush) {
         if (pending.trim()) speak(pending);
@@ -174,7 +179,9 @@ export function InterviewRoom({
           const { done, value } = await reader.read();
           if (done) break;
           full += decoder.decode(value, { stream: true });
-          setStreaming(full.replace(END_MARKER, ""));
+          // Hide markers (including a half-arrived one) while streaming; the
+          // finished turn re-renders with the answer highlighted.
+          setStreaming(stripAnswerMarkers(full.replace(END_MARKER, "")));
           speakNewSentences(full, false);
         }
       } catch {
@@ -433,7 +440,18 @@ export function InterviewRoom({
                     : "bg-muted"
                 )}
               >
-                {t.text}
+                {splitAnswerSegments(t.text).map((seg, si) =>
+                  seg.isAnswer ? (
+                    <strong
+                      key={si}
+                      className="my-1.5 block rounded-md border-l-2 border-primary bg-primary/10 px-3 py-2 font-medium text-foreground"
+                    >
+                      {seg.text}
+                    </strong>
+                  ) : (
+                    <span key={si}>{seg.text}</span>
+                  )
+                )}
               </div>
             </div>
           ))}
