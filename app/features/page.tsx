@@ -88,13 +88,13 @@ const INTERVIEW: Feature[] = [
     icon: FolderGit2,
     title: "Interview me on my own code",
     desc: "Paste a public GitHub repo and the interviewer reads it — file tree, README, key source files — then asks why you built it that way. Real interviewers spend half the loop on your project; this is the only way to rehearse defending code you actually wrote.",
-    href: "/interview/new",
+    href: "/interview/new?round=repo",
   },
   {
     icon: TrendingDown,
     title: "Depth ladder — find your ceiling",
     desc: "One topic, drilled deeper every rung — mechanism, trade-offs, failure modes, internals — stopping the moment you can't go further. Ends by naming the exact concept that stopped you, because depth is what gets people rejected, not breadth.",
-    href: "/interview/new",
+    href: "/interview/new?round=depth",
   },
   {
     icon: Mic,
@@ -136,7 +136,7 @@ const INTERVIEW: Feature[] = [
     icon: BadgeDollarSign,
     title: "Salary negotiation simulator",
     desc: "Practice the offer conversation against a recruiter persona with a hidden budget, in your currency of choice (USD, EUR, GBP, INR and more). Learn to anchor a number, hold silence after asking, and not leave money on the table — before it's a real offer.",
-    href: "/interview/new",
+    href: "/interview/new?round=negotiation",
   },
 ];
 

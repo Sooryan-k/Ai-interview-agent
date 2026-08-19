@@ -44,20 +44,33 @@ const ROUNDS = [
   { value: "repo", label: "Interview me on my own code" },
 ];
 
+const DIFFICULTIES = [
+  { value: "easy", label: "Easy — warm-up" },
+  { value: "medium", label: "Medium — real screen" },
+  { value: "hard", label: "Hard — senior bar" },
+];
+
 export function NewInterviewForm({
   defaultRoleTrack,
   curriculumId,
   level,
   levelTitle,
+  defaultRoundType,
 }: {
   defaultRoleTrack: string;
   curriculumId?: string;
   level?: number;
   levelTitle?: string;
+  /** Preselects a round when linked to as /interview/new?round=repo */
+  defaultRoundType?: string;
 }) {
   const router = useRouter();
   const [roleTrack, setRoleTrack] = useState(defaultRoleTrack);
-  const [roundType, setRoundType] = useState("technical");
+  const [roundType, setRoundType] = useState(() =>
+    ROUNDS.some((r) => r.value === defaultRoundType)
+      ? (defaultRoundType as string)
+      : "technical"
+  );
   const [difficulty, setDifficulty] = useState("medium");
   const [jdText, setJdText] = useState("");
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
@@ -142,7 +155,9 @@ export function NewInterviewForm({
               onValueChange={(v) => v && setRoundType(v)}
             >
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {(v) => ROUNDS.find((r) => r.value === v)?.label ?? String(v)}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {ROUNDS.map((r) => (
@@ -160,12 +175,18 @@ export function NewInterviewForm({
               onValueChange={(v) => v && setDifficulty(v)}
             >
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {(v) =>
+                    DIFFICULTIES.find((d) => d.value === v)?.label ?? String(v)
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="easy">Easy — warm-up</SelectItem>
-                <SelectItem value="medium">Medium — real screen</SelectItem>
-                <SelectItem value="hard">Hard — senior bar</SelectItem>
+                {DIFFICULTIES.map((d) => (
+                  <SelectItem key={d.value} value={d.value}>
+                    {d.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -237,7 +258,12 @@ export function NewInterviewForm({
               onValueChange={(v) => v && setCurrency(v as typeof currency)}
             >
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {(v) => {
+                    const c = CURRENCIES.find((x) => x.code === v);
+                    return c ? `${c.symbol} ${c.label}` : String(v);
+                  }}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {CURRENCIES.map((c) => (

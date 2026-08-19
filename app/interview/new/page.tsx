@@ -9,9 +9,13 @@ import { CurriculumSchema } from "@/lib/schemas";
 export default async function NewInterviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ c?: string; level?: string }>;
+  searchParams: Promise<{ c?: string; level?: string; round?: string }>;
 }) {
-  const { c: curriculumId, level: levelParam } = await searchParams;
+  const {
+    c: curriculumId,
+    level: levelParam,
+    round: roundParam,
+  } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -59,6 +63,7 @@ export default async function NewInterviewPage({
           curriculumId={curriculumId}
           level={level}
           levelTitle={levelTitle}
+          defaultRoundType={roundParam}
         />
 
         {/* Special rounds */}
