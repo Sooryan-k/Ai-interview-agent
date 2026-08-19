@@ -272,6 +272,56 @@ function main() {
     stripAnswerMarkers("Use arr[0] here.") === "Use arr[0] here."
   );
 
+  // ---- early-finish sign-off ----
+  const wrapTurn = transcriptPrompt(history, undefined, { wrapUp: true });
+  check(
+    "wrapUp: asks for a warm closing statement",
+    /Thank them for their time/.test(wrapTurn)
+  );
+  check("wrapUp: ends the interview", wrapTurn.includes(END_MARKER));
+  check(
+    "wrapUp: does not ask another question",
+    /Do NOT ask another question/.test(wrapTurn)
+  );
+  check(
+    "wrapUp: leaves scoring to the report",
+    /Do NOT give scores, detailed feedback/.test(wrapTurn)
+  );
+  check(
+    "wrapUp: won't invent praise for an empty interview",
+    /rather than inventing praise/.test(wrapTurn)
+  );
+  check(
+    "wrapUp, hint and reveal are three distinct prompts",
+    new Set([wrapTurn, hintTurn, revealTurn]).size === 3
+  );
+
+  // ---- interviewer name is not exposed ----
+  const named = interviewerSystemPrompt({
+    roleTrack: "React",
+    roundType: "technical",
+    difficulty: "medium",
+    interviewerName: "Sofia",
+    questionCount: 12,
+  });
+  check(
+    "identity: solo interviewer is told not to give a name",
+    /Never state or introduce yourself by name/.test(named)
+  );
+  const panel = interviewerSystemPrompt({
+    roleTrack: "React",
+    roundType: "technical",
+    difficulty: "medium",
+    interviewerName: "Sofia",
+    questionCount: 12,
+    panel: true,
+  });
+  check(
+    "identity: panel rounds keep names (they identify the speaker)",
+    !/Never state or introduce yourself by name/.test(panel) &&
+      panel.includes("[Priya]")
+  );
+
   const plainTurn = transcriptPrompt(history, "my answer");
   check(
     "normal turn is unaffected by the new options object",

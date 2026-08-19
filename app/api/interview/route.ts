@@ -19,10 +19,12 @@ const DIFFICULTIES = new Set(["easy", "medium", "hard"]);
 
 const INTERVIEWER_NAMES = ["Alex", "Priya", "Marcus", "Sofia", "Ken", "Amara"];
 
+// Each question is one Gemini call, so these directly set the cost of a round:
+// a hard interview is ~15 turn calls + 1 report call against the daily budget.
 const QUESTIONS_BY_DIFFICULTY: Record<string, number> = {
-  easy: 5,
-  medium: 6,
-  hard: 7,
+  easy: 10,
+  medium: 12,
+  hard: 15,
 };
 
 /**

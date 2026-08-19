@@ -73,6 +73,15 @@ ${ROUND_STYLE[cfg.roundType] ?? ROUND_STYLE.technical}`);
     sections.push(`BAR-RAISER MODE: You are a notoriously demanding "bar raiser". Hold an exceptionally high standard. Probe relentlessly for depth, challenge vague or buzzword answers, ask "why" and "what are the trade-offs" until you hit bedrock, and don't let the candidate off the hook. Stay professional and never rude — the pressure comes from rigor, not hostility. Score strictly.`);
   }
 
+  if (!cfg.panel) {
+    // The UI deliberately doesn't show an interviewer name, so don't let one
+    // leak into the transcript either. (Panel rounds are exempt: there the
+    // names are how the candidate tells the three interviewers apart.)
+    sections.push(
+      `Never state or introduce yourself by name, and never refer to yourself in the third person. You are simply "the interviewer".`
+    );
+  }
+
   if (cfg.panel) {
     sections.push(`PANEL MODE: This is a panel interview with THREE interviewers:
 - Priya (Engineering Manager) — cares about impact, collaboration, and decision-making.
@@ -187,7 +196,7 @@ ${
 export function transcriptPrompt(
   turns: { speaker: string; text: string }[],
   candidateAnswer?: string,
-  opts?: { hint?: boolean; reveal?: boolean }
+  opts?: { hint?: boolean; reveal?: boolean; wrapUp?: boolean }
 ): string {
   const lines = turns.map(
     (t) => `${t.speaker === "ai" ? "INTERVIEWER" : "CANDIDATE"}: ${t.text}`
@@ -197,6 +206,18 @@ export function transcriptPrompt(
     ? `Interview transcript so far:\n\n${lines.join("\n\n")}`
     : "The interview is about to begin. There is no transcript yet.";
 
+  if (opts?.wrapUp) {
+    return `${transcript}\n\nThe candidate has chosen to finish the interview here, before all the planned questions were asked.
+
+Close it out like a real interviewer would:
+- Two or three warm, natural sentences. Thank them for their time.
+- Name ONE genuine, specific thing from this conversation that landed well. If they barely answered anything, keep it honest and brief rather than inventing praise.
+- Tell them their report card is being put together now.
+- Do NOT ask another question. Do NOT give scores, detailed feedback or a list of weaknesses — that all belongs in the report.
+- Plain spoken prose; it will be read aloud, so no markdown, bullets or code blocks.
+
+End the message with the exact line ${END_MARKER}. Follow the output protocol for the eval JSON as usual.`;
+  }
   if (opts?.hint) {
     return `${transcript}\n\nThe candidate has asked for a HINT on the CURRENT question (do not advance to a new question). Give a brief, encouraging nudge: point them toward the key idea or framework they're missing without giving the full answer, then re-pose the same question. Follow the output protocol exactly; in the eval JSON for their previous answer, add the tag "used_hint".`;
   }

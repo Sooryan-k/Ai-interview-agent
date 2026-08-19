@@ -47,7 +47,6 @@ export function InterviewRoom({
   interviewId,
   initialTurns,
   initialStatus,
-  interviewerName,
   roleTrack,
   roundType,
   difficulty,
@@ -57,7 +56,6 @@ export function InterviewRoom({
   interviewId: string;
   initialTurns: Turn[];
   initialStatus: string;
-  interviewerName: string;
   roleTrack: string;
   roundType: string;
   difficulty: string;
@@ -117,7 +115,7 @@ export function InterviewRoom({
     async (
       answer: string | null,
       metrics: SpeechMetrics | null,
-      opts: { hint?: boolean; reveal?: boolean } = {}
+      opts: { hint?: boolean; reveal?: boolean; wrapUp?: boolean } = {}
     ) => {
       setPhase("streaming");
       setStreaming("");
@@ -133,6 +131,7 @@ export function InterviewRoom({
             speechMetrics: metrics ?? undefined,
             hint: opts.hint || undefined,
             reveal: opts.reveal || undefined,
+            wrapUp: opts.wrapUp || undefined,
           }),
         });
       } catch {
@@ -197,7 +196,8 @@ export function InterviewRoom({
       const aiSoFar = turnsRef.current.filter((t) => t.speaker === "ai").length;
       const atPlannedEnd = aiSoFar + 1 >= questionCount;
       const ended =
-        full.includes(END_MARKER) && (!opts.reveal || atPlannedEnd);
+        opts.wrapUp ||
+        (full.includes(END_MARKER) && (!opts.reveal || atPlannedEnd));
       const visible = full.replace(END_MARKER, "").trim();
       if (visible) {
         setTurns((prev) => [...prev, { speaker: "ai", text: visible }]);
@@ -314,8 +314,7 @@ export function InterviewRoom({
       {/* Status bar */}
       <div className="border-b bg-muted/30">
         <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-2 px-4 sm:px-6 py-2 text-sm">
-          <span className="font-medium">{interviewerName}</span>
-          <span className="text-muted-foreground">· {roleTrack}</span>
+          <span className="font-medium">{roleTrack}</span>
           <Badge variant="outline">{roundType.replace("_", " ")}</Badge>
           <Badge variant="outline">{difficulty}</Badge>
           {currency && <Badge variant="outline">{currency}</Badge>}
@@ -416,16 +415,16 @@ export function InterviewRoom({
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={finish}
-                      disabled={finishing || turns.length < 2}
+                      onClick={() => requestTurn(null, null, { wrapUp: true })}
+                      disabled={phase !== "ready" || turns.length < 2}
                     >
                       End early
                     </Button>
                   }
                 />
                 <TooltipContent>
-                  Wrap up now and get your report card from what you&apos;ve
-                  answered so far
+                  Wrap up here — the interviewer signs off, then you get your
+                  report card on what you&apos;ve answered so far
                 </TooltipContent>
               </Tooltip>
             )}
@@ -472,7 +471,7 @@ export function InterviewRoom({
               <div className="max-w-[85%] rounded-2xl bg-muted px-4 py-2.5 text-sm whitespace-pre-wrap">
                 {streaming || (
                   <span className="animate-pulse text-muted-foreground">
-                    {interviewerName} is thinking…
+                    Thinking…
                   </span>
                 )}
               </div>
@@ -480,7 +479,7 @@ export function InterviewRoom({
           )}
           {phase === "connecting" && turns.length === 0 && (
             <p className="py-10 text-center text-sm text-muted-foreground animate-pulse">
-              Connecting you with {interviewerName}…
+              Connecting you with your interviewer…
             </p>
           )}
         </div>

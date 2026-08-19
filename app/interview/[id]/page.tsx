@@ -49,7 +49,6 @@ export default async function InterviewPage({
         interviewId={interview.id}
         initialTurns={(turns ?? []) as { speaker: "ai" | "user"; text: string }[]}
         initialStatus={interview.status}
-        interviewerName={persona.interviewer_name ?? "Alex"}
         roleTrack={interview.role_track}
         roundType={interview.round_type}
         difficulty={interview.difficulty}

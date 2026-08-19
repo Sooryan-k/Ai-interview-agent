@@ -100,7 +100,13 @@ export function RecentInterviews({ initial }: { initial: InterviewRow[] }) {
               variant={iv.status === "active" ? "default" : "secondary"}
               className="relative shrink-0"
             >
-              {iv.status === "active" ? "Resume" : iv.status}
+              {iv.status === "active"
+                ? "Resume"
+                : // Finished but the report was never generated (or the tab was
+                  // closed before claiming it) — say so, since it's one click away.
+                  iv.status === "complete"
+                  ? "Get report"
+                  : iv.status}
             </Badge>
           )}
           <AlertDialog>

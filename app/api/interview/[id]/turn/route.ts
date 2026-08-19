@@ -44,6 +44,7 @@ export async function POST(
       : null;
   const hint = body?.hint === true;
   const reveal = body?.reveal === true;
+  const wrapUp = body?.wrapUp === true;
 
   // Load the interview (RLS guarantees ownership).
   const { data: interview } = await supabase
@@ -72,7 +73,14 @@ export async function POST(
   // required — unless the last turn is the candidate's (an AI reply was lost
   // mid-stream), in which case a bare request nudges the interviewer again.
   const lastSpeaker = history[history.length - 1]?.speaker;
-  if (history.length > 0 && !answer && lastSpeaker !== "user" && !hint && !reveal) {
+  if (
+    history.length > 0 &&
+    !answer &&
+    lastSpeaker !== "user" &&
+    !hint &&
+    !reveal &&
+    !wrapUp
+  ) {
     return NextResponse.json({ error: "answer required" }, { status: 400 });
   }
 
@@ -190,6 +198,7 @@ export async function POST(
   const prompt = transcriptPrompt(history, answer ?? undefined, {
     hint,
     reveal,
+    wrapUp,
   });
 
   // Stream: forward visible text only; hold back the sentinel + eval JSON.
@@ -269,8 +278,11 @@ export async function POST(
         // planned question, and keep the round open.
         const plannedQuestions = persona.question_count ?? 6;
         const atPlannedEnd = aiTurnCount + 1 >= plannedQuestions;
+        // wrapUp is an explicit "I'm done" from the candidate, so it ends the
+        // round whether or not the model remembered the marker.
         const ended =
-          visibleRaw.includes(END_MARKER) && (!reveal || atPlannedEnd);
+          wrapUp ||
+          (visibleRaw.includes(END_MARKER) && (!reveal || atPlannedEnd));
         const visible = visibleRaw.replace(END_MARKER, "").trim();
 
         let evalJson: unknown = null;
