@@ -66,7 +66,7 @@ npm run dev
 | Vercel Hobby | daily crons, 100 GB | One cron; streaming routes set `maxDuration: 60` |
 | Voice | — | Web Speech API is fully client-side and free (best in Chrome/Edge; text always works) |
 
-Quota guards (`daily_usage` table, atomic counter) cap per-user interviews/day and global calls/day. When the budget is spent the app degrades to **Practice Mode** — all cached curricula, lessons and quizzes stay available. Never a hard outage.
+Quota guards (`daily_usage` table, atomic counter) cap global calls/day. The **per-user interviews/day cap is currently disabled** (`CAPS.userInterviews` in [`lib/quota.ts`](lib/quota.ts) returns 0 = unlimited, so `USER_DAILY_INTERVIEW_CAP` is ignored); flip it back there if one account starts eating the global budget. When the budget is spent the app degrades to **Practice Mode** — all cached curricula, lessons and quizzes stay available. Never a hard outage.
 
 ## Architecture notes
 

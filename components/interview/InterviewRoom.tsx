@@ -84,7 +84,7 @@ export function InterviewRoom({
 
   const recognition = useSpeechRecognition();
   const tts = useSpeechSynthesis();
-  const { speak } = tts;
+  const { speak, cancel: cancelSpeech } = tts;
 
   const aiTurnCount =
     turns.filter((t) => t.speaker === "ai").length +
@@ -117,6 +117,11 @@ export function InterviewRoom({
       metrics: SpeechMetrics | null,
       opts: { hint?: boolean; reveal?: boolean; wrapUp?: boolean } = {}
     ) => {
+      // Whatever the interviewer was still saying is now stale — a hint, a
+      // revealed answer or the next question supersedes it. Cut it off so the
+      // voice always tracks the text on screen instead of finishing the
+      // previous question first.
+      cancelSpeech();
       setPhase("streaming");
       setStreaming("");
       spokenUpToRef.current = 0;
@@ -205,7 +210,7 @@ export function InterviewRoom({
       setStreaming("");
       setPhase(ended ? "ended" : "ready");
     },
-    [interviewId, speakNewSentences, questionCount]
+    [interviewId, speakNewSentences, questionCount, cancelSpeech]
   );
 
   // Kick off the opening question exactly once.

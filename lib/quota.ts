@@ -10,7 +10,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const CAPS = {
   global: () => Number(process.env.GLOBAL_DAILY_CALL_CAP || 800),
-  userInterviews: () => Number(process.env.USER_DAILY_INTERVIEW_CAP || 3),
+  /**
+   * Per-user interviews/day is currently DISABLED (0 = unlimited), so a
+   * deployed USER_DAILY_INTERVIEW_CAP is deliberately ignored — otherwise
+   * turning the limit off would also mean editing it in the hosting
+   * dashboard. The global cap still protects the daily AI budget.
+   * To restore it: `Number(process.env.USER_DAILY_INTERVIEW_CAP || 3)`.
+   */
+  userInterviews: () => 0,
   userStudy: () => Number(process.env.USER_DAILY_STUDY_TOPIC_CAP || 10),
 };
 
@@ -18,7 +25,9 @@ export type QuotaCheck = { scope: string; max: number };
 
 /**
  * Consumes one unit from each scope in order. Returns the first scope that
- * is over its cap, or null if all pass. In mock mode, quota is not consumed.
+ * is over its cap, or null if all pass. A cap of 0 or less means unlimited
+ * and is skipped entirely (nothing is counted for it). In mock mode, quota
+ * is not consumed.
  */
 export async function consumeQuota(
   supabase: SupabaseClient,
@@ -26,6 +35,7 @@ export async function consumeQuota(
 ): Promise<string | null> {
   if (process.env.GEMINI_MOCK === "1") return null;
   for (const { scope, max } of checks) {
+    if (max <= 0) continue; // unlimited
     const { data, error } = await supabase.rpc("increment_usage", {
       p_scope: scope,
       p_max: max,
