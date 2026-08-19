@@ -13,6 +13,7 @@ import {
   per100Words,
 } from "@/lib/speech/delivery";
 import { parseRepoRef } from "@/lib/github";
+import { panelistEmoji, splitSpeakerTag, stripSpeakerTag } from "@/lib/panel";
 import {
   interviewerSystemPrompt,
   transcriptPrompt,
@@ -350,6 +351,50 @@ function main() {
   check(
     "wrapUp(complete): forbids one more question",
     /do not ask another one/i.test(outOfQuestions)
+  );
+
+  // ---- panel speaker tags ----
+  const tagged = splitSpeakerTag("[Priya] So, tell me about scaling.");
+  check(
+    "panel: lifts the speaker out of the message",
+    tagged.speaker === "Priya" &&
+      tagged.body === "So, tell me about scaling."
+  );
+  check(
+    "panel: untagged messages are untouched",
+    splitSpeakerTag("Plain question?").speaker === null &&
+      splitSpeakerTag("Plain question?").body === "Plain question?"
+  );
+  check(
+    "panel: a bracketed list marker is not mistaken for a speaker",
+    splitSpeakerTag("[1] First point.").speaker === null
+  );
+  check(
+    "panel: tag never reaches text-to-speech",
+    stripSpeakerTag("[Marcus] Explain indexes.", true) === "Explain indexes."
+  );
+  check(
+    "panel: a half-streamed tag is hidden too",
+    stripSpeakerTag("[Mar", true) === "" &&
+      stripSpeakerTag("[Marcus]", true) === ""
+  );
+  check(
+    "panel: solo rounds never strip (a real bracket must survive)",
+    stripSpeakerTag("[1] First point.", false) === "[1] First point."
+  );
+  check(
+    "panel: each panelist keeps a stable, distinct emoji",
+    panelistEmoji("Priya") === panelistEmoji("priya") &&
+      new Set([
+        panelistEmoji("Priya"),
+        panelistEmoji("Marcus"),
+        panelistEmoji("Dana"),
+      ]).size === 3
+  );
+  check(
+    "panel: an unknown name still gets a stable emoji",
+    panelistEmoji("Jordan") === panelistEmoji("Jordan") &&
+      panelistEmoji("Jordan").length > 0
   );
 
   // ---- interviewer name is not exposed ----

@@ -40,6 +40,7 @@ export default async function InterviewPage({
     interviewer_name?: string;
     question_count?: number;
     currency?: string;
+    panel?: boolean;
   };
 
   return (
@@ -54,6 +55,7 @@ export default async function InterviewPage({
         difficulty={interview.difficulty}
         questionCount={persona.question_count ?? 6}
         currency={persona.currency}
+        panel={persona.panel === true}
       />
     </>
   );

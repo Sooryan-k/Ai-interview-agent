@@ -27,6 +27,7 @@ import {
   splitAnswerSegments,
   stripAnswerMarkers,
 } from "@/lib/schemas";
+import { panelistEmoji, splitSpeakerTag, stripSpeakerTag } from "@/lib/panel";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -52,6 +53,7 @@ export function InterviewRoom({
   difficulty,
   questionCount,
   currency,
+  panel = false,
 }: {
   interviewId: string;
   initialTurns: Turn[];
@@ -61,6 +63,8 @@ export function InterviewRoom({
   difficulty: string;
   questionCount: number;
   currency?: string;
+  /** Panel round: messages carry a "[Name]" speaker tag to surface. */
+  panel?: boolean;
 }) {
   const router = useRouter();
   const [turns, setTurns] = useState<Turn[]>(initialTurns);
@@ -93,8 +97,11 @@ export function InterviewRoom({
   // ---- streaming a turn from the server ----
   const speakNewSentences = useCallback(
     (text: string, flush: boolean) => {
-      // Markers are UI-only — never read them aloud.
-      const clean = stripAnswerMarkers(text.replace(END_MARKER, ""));
+      // Markers and the panel speaker tag are UI-only — never read them aloud.
+      const clean = stripSpeakerTag(
+        stripAnswerMarkers(text.replace(END_MARKER, "")),
+        panel
+      );
       const pending = clean.slice(spokenUpToRef.current);
       if (flush) {
         if (pending.trim()) speak(pending);
@@ -108,7 +115,7 @@ export function InterviewRoom({
         spokenUpToRef.current += match[0].length;
       }
     },
-    [speak]
+    [speak, panel]
   );
 
   const requestTurn = useCallback(
@@ -443,48 +450,97 @@ export function InterviewRoom({
       {/* Transcript */}
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-3xl space-y-4 px-4 sm:px-6 py-6">
-          {turns.map((t, i) => (
-            <div
-              key={i}
-              className={cn(
-                "flex",
-                t.speaker === "user" ? "justify-end" : "justify-start"
-              )}
-            >
+          {turns.map((t, i) => {
+            const { speaker, body } =
+              panel && t.speaker === "ai"
+                ? splitSpeakerTag(t.text)
+                : { speaker: null, body: t.text };
+            return (
               <div
+                key={i}
                 className={cn(
-                  "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap",
-                  t.speaker === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                  "flex items-start gap-2",
+                  t.speaker === "user" ? "justify-end" : "justify-start"
                 )}
               >
-                {splitAnswerSegments(t.text).map((seg, si) =>
-                  seg.isAnswer ? (
-                    <strong
-                      key={si}
-                      className="my-1.5 block rounded-md border-l-2 border-primary bg-primary/10 px-3 py-2 font-medium text-foreground"
-                    >
-                      {seg.text}
-                    </strong>
-                  ) : (
-                    <span key={si}>{seg.text}</span>
-                  )
-                )}
-              </div>
-            </div>
-          ))}
-          {phase === "streaming" && (
-            <div className="flex justify-start">
-              <div className="max-w-[85%] rounded-2xl bg-muted px-4 py-2.5 text-sm whitespace-pre-wrap">
-                {streaming || (
-                  <span className="animate-pulse text-muted-foreground">
-                    Thinking…
+                {speaker && (
+                  <span
+                    aria-hidden
+                    title={speaker}
+                    className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full border bg-background text-base"
+                  >
+                    {panelistEmoji(speaker)}
                   </span>
                 )}
+                <div className="min-w-0 max-w-[85%]">
+                  {speaker && (
+                    <p className="mb-1 text-xs font-medium text-muted-foreground">
+                      {speaker}
+                    </p>
+                  )}
+                  <div
+                    className={cn(
+                      "rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap",
+                      t.speaker === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
+                    )}
+                  >
+                    {splitAnswerSegments(body).map((seg, si) =>
+                      seg.isAnswer ? (
+                        <strong
+                          key={si}
+                          className="my-1.5 block rounded-md border-l-2 border-primary bg-primary/10 px-3 py-2 font-medium text-foreground"
+                        >
+                          {seg.text}
+                        </strong>
+                      ) : (
+                        <span key={si}>{seg.text}</span>
+                      )
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })}
+          {phase === "streaming" &&
+            (() => {
+              // Surface the panelist as soon as their tag arrives, and keep the
+              // raw tag from flashing in the bubble while the rest streams in.
+              const live = panel
+                ? splitSpeakerTag(streaming)
+                : { speaker: null, body: streaming };
+              const shown = panel
+                ? stripSpeakerTag(live.body, true)
+                : live.body;
+              return (
+                <div className="flex items-start justify-start gap-2">
+                  {live.speaker && (
+                    <span
+                      aria-hidden
+                      title={live.speaker}
+                      className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full border bg-background text-base"
+                    >
+                      {panelistEmoji(live.speaker)}
+                    </span>
+                  )}
+                  <div className="min-w-0 max-w-[85%]">
+                    {live.speaker && (
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">
+                        {live.speaker}
+                      </p>
+                    )}
+                    <div className="rounded-2xl bg-muted px-4 py-2.5 text-sm whitespace-pre-wrap">
+                      {shown || (
+                        <span className="animate-pulse text-muted-foreground">
+                          Thinking…
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           {phase === "connecting" && turns.length === 0 && (
             <p className="py-10 text-center text-sm text-muted-foreground animate-pulse">
               Connecting you with your interviewer…
