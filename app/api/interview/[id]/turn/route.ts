@@ -195,10 +195,19 @@ export async function POST(
         ? { label: persona.repo_label, digest: persona.repo_digest }
         : null,
   });
+  // Hard stop. The model can't reliably count its own questions once hints and
+  // reveals are in the mix, so once the planned number of interviewer turns is
+  // used up, this turn becomes the sign-off no matter what was requested —
+  // otherwise repeatedly clicking "show me the answer" runs on forever.
+  const plannedQuestions = persona.question_count ?? 6;
+  const mustClose = aiTurnCount >= plannedQuestions;
+  const closing = wrapUp || mustClose;
+
   const prompt = transcriptPrompt(history, answer ?? undefined, {
-    hint,
-    reveal,
-    wrapUp,
+    hint: hint && !closing,
+    reveal: reveal && !closing,
+    wrapUp: closing,
+    wrapUpReason: wrapUp ? "early" : "complete",
   });
 
   // Stream: forward visible text only; hold back the sentinel + eval JSON.
@@ -276,13 +285,11 @@ export async function POST(
         // so the model sometimes wraps the whole interview up mid-round.
         // Ignore an end marker on a reveal unless we really are at the last
         // planned question, and keep the round open.
-        const plannedQuestions = persona.question_count ?? 6;
-        const atPlannedEnd = aiTurnCount + 1 >= plannedQuestions;
-        // wrapUp is an explicit "I'm done" from the candidate, so it ends the
-        // round whether or not the model remembered the marker.
+        // `closing` covers both an explicit "end early" and running out of
+        // planned questions; either way the round is over whether or not the
+        // model remembered the marker. A reveal on its own never ends it.
         const ended =
-          wrapUp ||
-          (visibleRaw.includes(END_MARKER) && (!reveal || atPlannedEnd));
+          closing || (visibleRaw.includes(END_MARKER) && !reveal);
         const visible = visibleRaw.replace(END_MARKER, "").trim();
 
         let evalJson: unknown = null;

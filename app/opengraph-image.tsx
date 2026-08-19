@@ -45,7 +45,7 @@ export default function OpengraphImage() {
             </svg>
           </div>
           <div style={{ fontSize: 68, fontWeight: 700, color: "#fff" }}>
-            DryRun AI
+            dryrun AI
           </div>
         </div>
         <div style={{ fontSize: 32, color: "#a1a1aa", textAlign: "center" }}>

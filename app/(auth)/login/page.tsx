@@ -24,7 +24,7 @@ export default async function LoginPage() {
         <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground">
           <Target className="size-5" />
         </span>
-        <span className="text-lg font-bold tracking-tight">DryRun AI</span>
+        <span className="text-lg font-bold tracking-tight">dryrun AI</span>
       </Link>
       <Suspense>
         <LoginForm />

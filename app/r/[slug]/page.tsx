@@ -62,7 +62,7 @@ export default async function SharedReportPage({
       <div className="print-hidden rounded-lg border bg-muted/40 px-4 py-2 text-center text-xs text-muted-foreground">
         Shared mock-interview report ·{" "}
         <Link href="/" className="underline underline-offset-2">
-          made with DryRun AI — practice yours free
+          made with dryrun AI — practice yours free
         </Link>
       </div>
 

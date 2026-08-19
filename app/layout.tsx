@@ -26,8 +26,8 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "DryRun AI — Interview Agent",
-    template: "%s — DryRun AI",
+    default: "dryrun AI — Interview Agent",
+    template: "%s — dryrun AI",
   },
   description: DESCRIPTION,
   keywords: [
@@ -40,19 +40,19 @@ export const metadata: Metadata = {
     "interview simulator",
     "voice mock interview",
   ],
-  authors: [{ name: "DryRun AI" }],
+  authors: [{ name: "dryrun AI" }],
   robots: { index: true, follow: true },
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: SITE_URL,
-    siteName: "DryRun AI",
-    title: "DryRun AI — Interview Agent",
+    siteName: "dryrun AI",
+    title: "dryrun AI — Interview Agent",
     description: DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: "DryRun AI — Interview Agent",
+    title: "dryrun AI — Interview Agent",
     description: DESCRIPTION,
   },
 };

@@ -32,9 +32,9 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
-  title: "Features — DryRun AI",
+  title: "Features — dryrun AI",
   description:
-    "Every feature in DryRun AI, explained: prep paths, voice/whiteboard/coding interviews, negotiation sims, analytics, streaks and more.",
+    "Every feature in dryrun AI, explained: prep paths, voice/whiteboard/coding interviews, negotiation sims, analytics, streaks and more.",
 };
 
 interface Feature {
@@ -222,7 +222,7 @@ const PLATFORM: Feature[] = [
   {
     icon: Download,
     title: "Installable & works offline",
-    desc: "Install DryRun AI to your home screen like a native app. Pages you've already visited keep working without a connection, so you can review study material anywhere.",
+    desc: "Install dryrun AI to your home screen like a native app. Pages you've already visited keep working without a connection, so you can review study material anywhere.",
     href: "/settings",
   },
 ];
@@ -279,7 +279,7 @@ export default function FeaturesPage() {
             <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
               <Target className="size-4" />
             </span>
-            <span className="text-sm font-bold tracking-tight">DryRun AI</span>
+            <span className="text-sm font-bold tracking-tight">dryrun AI</span>
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -299,7 +299,7 @@ export default function FeaturesPage() {
           />
           <div className="mx-auto w-full max-w-4xl px-4 pt-16 pb-10 text-center sm:px-6 sm:pt-24 sm:pb-14">
             <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
-              Everything inside DryRun AI
+              Everything inside dryrun AI
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground text-balance sm:text-lg">
               One prep path, four interview formats, and the analytics to

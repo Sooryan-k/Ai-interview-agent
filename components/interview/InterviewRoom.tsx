@@ -195,14 +195,17 @@ export function InterviewRoom({
       }
       speakNewSentences(full, true);
 
-      // Mirror the server's rule: asking to see an answer must not end the
-      // round early (a depth ladder reads it as hitting the ceiling), unless
-      // this really was the last planned question.
+      // Mirror the server exactly: the round closes when the candidate asks to
+      // stop, or once the planned questions are used up. A reveal on its own
+      // never ends it (a depth ladder otherwise reads it as hitting the
+      // ceiling), so repeated reveals still terminate — via the limit, not the
+      // model's own bookkeeping.
       const aiSoFar = turnsRef.current.filter((t) => t.speaker === "ai").length;
-      const atPlannedEnd = aiSoFar + 1 >= questionCount;
+      const mustClose = aiSoFar >= questionCount;
       const ended =
         opts.wrapUp ||
-        (full.includes(END_MARKER) && (!opts.reveal || atPlannedEnd));
+        mustClose ||
+        (full.includes(END_MARKER) && !opts.reveal);
       const visible = full.replace(END_MARKER, "").trim();
       if (visible) {
         setTurns((prev) => [...prev, { speaker: "ai", text: visible }]);

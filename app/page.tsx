@@ -82,7 +82,7 @@ export default async function Home() {
             <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
               <Target className="size-4" />
             </span>
-            <span className="text-sm font-bold tracking-tight">DryRun AI</span>
+            <span className="text-sm font-bold tracking-tight">dryrun AI</span>
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />

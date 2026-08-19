@@ -196,7 +196,12 @@ ${
 export function transcriptPrompt(
   turns: { speaker: string; text: string }[],
   candidateAnswer?: string,
-  opts?: { hint?: boolean; reveal?: boolean; wrapUp?: boolean }
+  opts?: {
+    hint?: boolean;
+    reveal?: boolean;
+    wrapUp?: boolean;
+    wrapUpReason?: "early" | "complete";
+  }
 ): string {
   const lines = turns.map(
     (t) => `${t.speaker === "ai" ? "INTERVIEWER" : "CANDIDATE"}: ${t.text}`
@@ -207,7 +212,11 @@ export function transcriptPrompt(
     : "The interview is about to begin. There is no transcript yet.";
 
   if (opts?.wrapUp) {
-    return `${transcript}\n\nThe candidate has chosen to finish the interview here, before all the planned questions were asked.
+    const why =
+      opts.wrapUpReason === "complete"
+        ? "This interview has now used up all of its planned questions, so it ends here — do not ask another one, however the last message went."
+        : "The candidate has chosen to finish the interview here, before all the planned questions were asked.";
+    return `${transcript}\n\n${why}
 
 Close it out like a real interviewer would:
 - Two or three warm, natural sentences. Thank them for their time.

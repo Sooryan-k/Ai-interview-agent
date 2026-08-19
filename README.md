@@ -1,4 +1,4 @@
-# DryRun AI — Interview Agent
+# dryrun AI — Interview Agent
 
 Sign in, pick your stack, and the agent prepares **everything** for your interviews:
 

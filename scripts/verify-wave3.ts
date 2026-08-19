@@ -329,6 +329,28 @@ function main() {
     "wrapUp, hint and reveal are three distinct prompts",
     new Set([wrapTurn, hintTurn, revealTurn]).size === 3
   );
+  check(
+    "wrapUp(early): says the candidate chose to stop",
+    /chosen to finish the interview here/.test(
+      transcriptPrompt(history, undefined, {
+        wrapUp: true,
+        wrapUpReason: "early",
+      })
+    )
+  );
+  const outOfQuestions = transcriptPrompt(history, undefined, {
+    wrapUp: true,
+    wrapUpReason: "complete",
+  });
+  check(
+    "wrapUp(complete): says the questions ran out, not that they quit",
+    /used up all of its planned questions/.test(outOfQuestions) &&
+      !/chosen to finish/.test(outOfQuestions)
+  );
+  check(
+    "wrapUp(complete): forbids one more question",
+    /do not ask another one/i.test(outOfQuestions)
+  );
 
   // ---- interviewer name is not exposed ----
   const named = interviewerSystemPrompt({
