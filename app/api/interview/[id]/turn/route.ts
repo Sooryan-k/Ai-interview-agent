@@ -43,6 +43,7 @@ export async function POST(
       ? body.speechMetrics
       : null;
   const hint = body?.hint === true;
+  const reveal = body?.reveal === true;
 
   // Load the interview (RLS guarantees ownership).
   const { data: interview } = await supabase
@@ -71,7 +72,7 @@ export async function POST(
   // required — unless the last turn is the candidate's (an AI reply was lost
   // mid-stream), in which case a bare request nudges the interviewer again.
   const lastSpeaker = history[history.length - 1]?.speaker;
-  if (history.length > 0 && !answer && lastSpeaker !== "user" && !hint) {
+  if (history.length > 0 && !answer && lastSpeaker !== "user" && !hint && !reveal) {
     return NextResponse.json({ error: "answer required" }, { status: 400 });
   }
 
@@ -186,7 +187,10 @@ export async function POST(
         ? { label: persona.repo_label, digest: persona.repo_digest }
         : null,
   });
-  const prompt = transcriptPrompt(history, answer ?? undefined, hint);
+  const prompt = transcriptPrompt(history, answer ?? undefined, {
+    hint,
+    reveal,
+  });
 
   // Stream: forward visible text only; hold back the sentinel + eval JSON.
   const encoder = new TextEncoder();

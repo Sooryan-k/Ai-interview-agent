@@ -13,7 +13,10 @@ import {
   per100Words,
 } from "@/lib/speech/delivery";
 import { parseRepoRef } from "@/lib/github";
-import { interviewerSystemPrompt } from "@/lib/prompts/interviewer";
+import {
+  interviewerSystemPrompt,
+  transcriptPrompt,
+} from "@/lib/prompts/interviewer";
 import { reportPrompt } from "@/lib/prompts/report";
 import { EvalSchema } from "@/lib/schemas";
 import { aggregateDelivery, type EvalTurnRow } from "@/lib/analytics";
@@ -115,6 +118,86 @@ function main() {
   check(
     "normal round omits the depth field from the eval shape",
     !normalPrompt.includes('"depth"')
+  );
+
+  // ---- difficulty ramp ----
+  const mk = (difficulty: string, roundType = "technical") =>
+    interviewerSystemPrompt({
+      roleTrack: "React",
+      roundType,
+      difficulty,
+      interviewerName: "Alex",
+      questionCount: 6,
+    });
+  const easy = mk("easy");
+  const medium = mk("medium");
+  const hard = mk("hard");
+
+  check("ramp: easy opens with fundamentals", /DIFFICULTY RAMP/.test(easy));
+  check(
+    "ramp: easy names the stack in the opener rule",
+    easy.includes('"what is X, and why does it exist" about the most central concept in React')
+  );
+  check("ramp: easy stays approachable throughout", /EASY round/.test(easy));
+  check("ramp: medium ramps to a mid-level bar", /MEDIUM round/.test(medium));
+  check(
+    "ramp: forbids jumping ahead on a strong answer",
+    /Never jump to the hardest material early/.test(medium)
+  );
+  check("ramp: hard is NOT ramped", !/DIFFICULTY RAMP/.test(hard));
+  check(
+    "ramp: hard keeps the adaptive rule instead",
+    /Adapt difficulty as you go/.test(hard)
+  );
+  check(
+    "ramp: skipped for conversational rounds (hr, negotiation)",
+    !/DIFFICULTY RAMP/.test(mk("easy", "hr")) &&
+      !/DIFFICULTY RAMP/.test(mk("easy", "negotiation"))
+  );
+  check(
+    "ramp: never collides with the depth ladder's own plan",
+    !/DIFFICULTY RAMP/.test(mk("easy", "depth"))
+  );
+
+  // ---- reveal-answer turn ----
+  const history = [
+    { speaker: "ai", text: "What is a React key?" },
+  ];
+  const revealTurn = transcriptPrompt(history, undefined, { reveal: true });
+  check("reveal: teaches the answer", /Teach the answer properly/.test(revealTurn));
+  check(
+    "reveal: advances to the next question",
+    /ask your NEXT question/.test(revealTurn)
+  );
+  check(
+    "reveal: emits a null eval since nothing was answered",
+    /output null for the eval JSON/.test(revealTurn)
+  );
+  check(
+    "reveal: stays speakable (no markdown in the spoken answer)",
+    /no markdown, no bullets and no code blocks/.test(revealTurn)
+  );
+
+  const hintTurn = transcriptPrompt(history, undefined, { hint: true });
+  check(
+    "hint: still withholds the full answer",
+    /without giving the full answer/.test(hintTurn)
+  );
+  check(
+    "hint: does not advance the question",
+    /do not advance to a new question/.test(hintTurn)
+  );
+  check(
+    "reveal and hint are distinct prompts",
+    revealTurn !== hintTurn &&
+      !/do not advance to a new question/.test(revealTurn)
+  );
+
+  const plainTurn = transcriptPrompt(history, "my answer");
+  check(
+    "normal turn is unaffected by the new options object",
+    /Produce your next interviewer message now/.test(plainTurn) &&
+      plainTurn.includes("CANDIDATE: my answer")
   );
 
   // ---- repo prompt ----

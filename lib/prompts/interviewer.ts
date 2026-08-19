@@ -38,6 +38,19 @@ const ROUND_STYLE: Record<string, string> = {
     "Interview the candidate about a codebase THEY wrote. You have a digest of their real repository below. Ask about their actual design decisions, trade-offs and failure modes — the way a senior engineer probes a project on a resume.",
 };
 
+/**
+ * Rounds where "difficulty" means depth of knowledge, so a ground-up ramp
+ * makes sense. Excluded: hr and negotiation (conversations, not quizzes) and
+ * depth (its own ladder plan already escalates by design).
+ */
+const RAMPED_ROUNDS = new Set([
+  "technical",
+  "system_design",
+  "dsa",
+  "behavioral",
+  "repo",
+]);
+
 export function interviewerSystemPrompt(cfg: InterviewerConfig): string {
   const sections: string[] = [];
 
@@ -129,8 +142,25 @@ ${cfg.repo.digest}
     sections.push(`INTERVIEW PLAN:
 - Ask exactly ${cfg.questionCount} main questions total (follow-ups to the same question don't count as new questions, but use at most one follow-up per question).
 - One question per message. Briefly acknowledge the previous answer (one sentence, natural, no praise inflation) before the next question.
-- Adapt difficulty: if the last two answers were strong, go deeper/harder; if the candidate is struggling, ease off slightly.
 - After the candidate answers your final question, give a short, warm closing statement (2-3 sentences, no detailed feedback) and include the exact line ${END_MARKER} in that message.`);
+
+    // Easy/medium rounds climb from the ground up; hard opens at the senior bar.
+    if (RAMPED_ROUNDS.has(cfg.roundType) && cfg.difficulty !== "hard") {
+      sections.push(`DIFFICULTY RAMP — build up, never front-load the hard material:
+- Your FIRST question must be genuinely introductory: a definition or "what is X, and why does it exist" about the most central concept in ${cfg.roleTrack}. Never open with architecture, optimisation, edge cases, or anything you'd ask a senior.
+- Climb ONE step at a time across the round: fundamentals → everyday practical usage → trade-offs and "why this over that" → edge cases, failure modes and debugging.
+- Even when an answer is excellent, the next question moves up a single step. Never jump to the hardest material early because the candidate seems strong.
+- If they struggle, hold at the current step or drop back one — do not keep climbing.
+${
+  cfg.difficulty === "easy"
+    ? `- This is an EASY round: stay between fundamentals and practical usage the whole way through. Even your final question should be comfortably approachable.`
+    : `- This is a MEDIUM round: your final question should sit at a realistic mid-level screening bar — but you must have climbed to it, not started there.`
+}`);
+    } else if (cfg.roundType !== "depth") {
+      sections.push(
+        `Adapt difficulty as you go: if the last two answers were strong, go deeper and harder; if the candidate is struggling, ease off slightly.`
+      );
+    }
   }
 
   const evalShape =
@@ -151,7 +181,7 @@ ${cfg.repo.digest}
 export function transcriptPrompt(
   turns: { speaker: string; text: string }[],
   candidateAnswer?: string,
-  hint?: boolean
+  opts?: { hint?: boolean; reveal?: boolean }
 ): string {
   const lines = turns.map(
     (t) => `${t.speaker === "ai" ? "INTERVIEWER" : "CANDIDATE"}: ${t.text}`
@@ -161,8 +191,18 @@ export function transcriptPrompt(
     ? `Interview transcript so far:\n\n${lines.join("\n\n")}`
     : "The interview is about to begin. There is no transcript yet.";
 
-  if (hint) {
+  if (opts?.hint) {
     return `${transcript}\n\nThe candidate has asked for a HINT on the CURRENT question (do not advance to a new question). Give a brief, encouraging nudge: point them toward the key idea or framework they're missing without giving the full answer, then re-pose the same question. Follow the output protocol exactly; in the eval JSON for their previous answer, add the tag "used_hint".`;
+  }
+  if (opts?.reveal) {
+    return `${transcript}\n\nThe candidate could not answer the CURRENT question and has asked to SEE the answer so they can learn it.
+
+Do all of this in one message:
+1. Say briefly and without judgement that you'll walk them through it (one short sentence — no lecturing about not knowing).
+2. Teach the answer properly: what the right answer is, WHY it's right, and the one detail interviewers most want to hear. Aim for 3-6 sentences of plain spoken prose — this is the part they're here to learn from, so make it genuinely useful, but it will be read aloud so use no markdown, no bullets and no code blocks.
+3. Then ask your NEXT question and continue the interview normally. This counts as a new question.
+
+Because they never answered, output null for the eval JSON instead of an object.`;
   }
   return `${transcript}\n\nProduce your next interviewer message now, following the output protocol exactly.`;
 }

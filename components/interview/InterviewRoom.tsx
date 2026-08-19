@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  BookOpen,
   Footprints,
   Lightbulb,
   Mic,
@@ -109,7 +110,7 @@ export function InterviewRoom({
     async (
       answer: string | null,
       metrics: SpeechMetrics | null,
-      hint = false
+      opts: { hint?: boolean; reveal?: boolean } = {}
     ) => {
       setPhase("streaming");
       setStreaming("");
@@ -123,7 +124,8 @@ export function InterviewRoom({
           body: JSON.stringify({
             answer: answer ?? undefined,
             speechMetrics: metrics ?? undefined,
-            hint: hint || undefined,
+            hint: opts.hint || undefined,
+            reveal: opts.reveal || undefined,
           }),
         });
       } catch {
@@ -479,13 +481,13 @@ export function InterviewRoom({
               )}
               {turns.length > 0 &&
                 turns[turns.length - 1].speaker === "ai" && (
-                  <div className="flex justify-end">
+                  <div className="flex flex-wrap justify-end gap-x-4 gap-y-1">
                     <Tooltip>
                       <TooltipTrigger
                         render={
                           <button
                             type="button"
-                            onClick={() => requestTurn(null, null, true)}
+                            onClick={() => requestTurn(null, null, { hint: true })}
                             disabled={phase !== "ready" || countdown > 0}
                             className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
                           >
@@ -498,6 +500,27 @@ export function InterviewRoom({
                       />
                       <TooltipContent>
                         Stuck? Get a nudge without giving up
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <button
+                            type="button"
+                            onClick={() => requestTurn(null, null, { reveal: true })}
+                            disabled={phase !== "ready" || countdown > 0}
+                            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              <BookOpen className="size-3.5" /> Show me the
+                              answer
+                            </span>
+                          </button>
+                        }
+                      />
+                      <TooltipContent>
+                        Don&apos;t know it? Get the full answer explained, then
+                        move on to the next question
                       </TooltipContent>
                     </Tooltip>
                   </div>
