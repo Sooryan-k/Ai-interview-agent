@@ -1,8 +1,23 @@
 interface ReportTurn {
   speaker: string;
   text: string;
-  eval?: { score: number; note: string; tags: string[] } | null;
+  eval?: {
+    score: number;
+    note: string;
+    tags: string[];
+    depth?: number;
+  } | null;
 }
+
+/** Extra framing for rounds whose report shouldn't read like a generic Q&A. */
+const ROUND_FRAMING: Record<string, string> = {
+  depth: `This was a DEPTH LADDER: one topic, drilled deeper every rung until the candidate hit their ceiling. Frame the whole report around that ceiling.
+- "overall_score" should reflect how deep they got before stalling, not how many questions they answered.
+- Put the ceiling in the FIRST weakness, stated concretely: the specific concept they could not explain, and the rung it happened on.
+- "per_question" is one entry per rung, in order, so they can see the climb.
+- Recommendations must target the exact gap that stopped them, not the topic in general.`,
+  repo: `This interview was about a repository the candidate wrote themselves. Judge how well they defended their OWN design decisions — clarity on trade-offs, awareness of failure modes, and honesty about what they'd change. Do not judge the code's quality itself; judge their ability to explain and defend it. Reference specific files or decisions they discussed.`,
+};
 
 export function reportPrompt(args: {
   roleTrack: string;
@@ -13,16 +28,19 @@ export function reportPrompt(args: {
   const transcript = args.turns
     .map((t) => {
       const line = `${t.speaker === "ai" ? "INTERVIEWER" : "CANDIDATE"}: ${t.text}`;
-      return t.eval
-        ? `${line}\n[private per-answer eval: score ${t.eval.score}/10 — ${t.eval.note}]`
-        : line;
+      if (!t.eval) return line;
+      const rung =
+        typeof t.eval.depth === "number" ? ` — rung ${t.eval.depth}` : "";
+      return `${line}\n[private per-answer eval: score ${t.eval.score}/10${rung} — ${t.eval.note}]`;
     })
     .join("\n\n");
+
+  const framing = ROUND_FRAMING[args.roundType];
 
   return `You are a senior hiring-committee reviewer writing a candid, constructive report card for a mock interview.
 
 Interview: ${args.roleTrack} — ${args.roundType} round — ${args.difficulty} difficulty.
-
+${framing ? `\n${framing}\n` : ""}
 Full transcript (with private per-answer evaluations where available):
 
 ${transcript}

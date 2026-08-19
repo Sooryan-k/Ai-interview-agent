@@ -45,6 +45,8 @@ export const EvalSchema = z.object({
   score: z.number().min(0).max(10),
   note: z.string(),
   tags: z.array(z.string()).catch([]),
+  /** Depth-ladder rounds only: which rung this answer was on. */
+  depth: z.number().int().min(1).max(20).optional().catch(undefined),
 });
 export type TurnEval = z.infer<typeof EvalSchema>;
 

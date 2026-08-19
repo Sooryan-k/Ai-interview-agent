@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import {
   useSpeechRecognition,
   countFillers,
+  countHedges,
   type SpeechMetrics,
 } from "@/lib/speech/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/lib/speech/useSpeechSynthesis";
@@ -254,7 +255,12 @@ export function InterviewRoom({
     if (!text || phase !== "ready" || countdown > 0) return;
     let metrics = metricsRef.current;
     if (recognition.listening) metrics = recognition.stop();
-    if (metrics) metrics = { ...metrics, fillers: countFillers(text) };
+    if (metrics)
+      metrics = {
+        ...metrics,
+        fillers: countFillers(text),
+        hedges: countHedges(text),
+      };
     metricsRef.current = null;
     setComposer("");
     setTurns((prev) => [...prev, { speaker: "user", text }]);
@@ -294,7 +300,8 @@ export function InterviewRoom({
           {currency && <Badge variant="outline">{currency}</Badge>}
           <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
             <span className="text-xs text-muted-foreground tabular-nums">
-              Q {Math.min(aiTurnCount, questionCount)}/{questionCount}
+              {roundType === "depth" ? "Rung" : "Q"}{" "}
+              {Math.min(aiTurnCount, questionCount)}/{questionCount}
             </span>
             {tts.supported && (
               <>

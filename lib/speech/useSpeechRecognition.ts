@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { clarityScore } from "@/lib/speech/delivery";
+
 /* Minimal typings for the Web Speech API (not in lib.dom for all targets). */
 interface SpeechRecognitionResultLike {
   isFinal: boolean;
-  0: { transcript: string };
+  0: { transcript: string; confidence?: number };
 }
 interface SpeechRecognitionEventLike {
   resultIndex: number;
@@ -26,35 +28,19 @@ interface SpeechRecognitionLike {
   onerror: ((e: { error: string }) => void) | null;
 }
 
-const FILLER_WORDS = [
-  "um",
-  "uh",
-  "erm",
-  "hmm",
-  "like",
-  "you know",
-  "basically",
-  "actually",
-  "sort of",
-  "kind of",
-];
-
 export interface SpeechMetrics {
   fillers: number;
+  /** Weak-commitment phrases ("I think maybe…"). Counted at submit time. */
+  hedges: number;
   wpm: number;
   long_pauses: number;
   duration_s: number;
+  /** 0-100 recognition confidence, or null when the browser reports none. */
+  clarity: number | null;
 }
 
-export function countFillers(text: string): number {
-  const lower = ` ${text.toLowerCase()} `;
-  let count = 0;
-  for (const f of FILLER_WORDS) {
-    const re = new RegExp(`\\b${f.replace(/ /g, "\\s+")}\\b`, "g");
-    count += (lower.match(re) ?? []).length;
-  }
-  return count;
-}
+// Re-exported so existing callers keep importing from the hook they already use.
+export { countFillers, countHedges } from "@/lib/speech/delivery";
 
 export function useSpeechRecognition(lang = "en-US") {
   const [supported, setSupported] = useState(false);
@@ -66,6 +52,7 @@ export function useSpeechRecognition(lang = "en-US") {
   const lastResultAtRef = useRef<number>(0);
   const pausesRef = useRef<number>(0);
   const wordsRef = useRef<number>(0);
+  const confidencesRef = useRef<number[]>([]);
 
   useEffect(() => {
     const w = window as unknown as Record<string, unknown>;
@@ -93,6 +80,10 @@ export function useSpeechRecognition(lang = "en-US") {
           const text = r[0].transcript.trim();
           if (text) {
             wordsRef.current += text.split(/\s+/).length;
+            const conf = r[0].confidence;
+            if (typeof conf === "number" && conf > 0) {
+              confidencesRef.current.push(conf);
+            }
             onFinalRef.current(text);
           }
         } else {
@@ -131,6 +122,7 @@ export function useSpeechRecognition(lang = "en-US") {
     lastResultAtRef.current = 0;
     pausesRef.current = 0;
     wordsRef.current = 0;
+    confidencesRef.current = [];
     try {
       rec.start();
       setListening(true);
@@ -153,10 +145,13 @@ export function useSpeechRecognition(lang = "en-US") {
     const wpm =
       durationS > 5 ? Math.round((wordsRef.current / durationS) * 60) : 0;
     return {
-      fillers: 0, // fillers are counted on the composed text at submit time
+      // fillers/hedges are counted on the composed text at submit time
+      fillers: 0,
+      hedges: 0,
       wpm,
       long_pauses: pausesRef.current,
       duration_s: Math.round(durationS),
+      clarity: clarityScore(confidencesRef.current),
     };
   }, []);
 

@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { clarityLabel } from "@/lib/speech/delivery";
 import { ReportActions } from "@/components/report/ReportActions";
 import { TranscriptReplay } from "@/components/report/TranscriptReplay";
 
@@ -68,16 +69,32 @@ export default async function ReportPage({
     .order("idx", { ascending: true });
 
   // Aggregate client-computed speech metrics (free confidence signals).
+  type SpeechMetric = {
+    fillers?: number;
+    hedges?: number;
+    wpm?: number;
+    long_pauses?: number;
+    clarity?: number | null;
+  };
   const userTurns = (turns ?? []).filter((t) => t.speaker === "user");
   const metrics = userTurns
-    .map((t) => t.speech_metrics as { fillers?: number; wpm?: number; long_pauses?: number } | null)
-    .filter(Boolean) as { fillers?: number; wpm?: number; long_pauses?: number }[];
+    .map((t) => t.speech_metrics as SpeechMetric | null)
+    .filter(Boolean) as SpeechMetric[];
   const totalFillers = metrics.reduce((s, m) => s + (m.fillers ?? 0), 0);
+  const totalHedges = metrics.reduce((s, m) => s + (m.hedges ?? 0), 0);
   const wpmValues = metrics.map((m) => m.wpm ?? 0).filter((v) => v > 0);
   const avgWpm = wpmValues.length
     ? Math.round(wpmValues.reduce((s, v) => s + v, 0) / wpmValues.length)
     : null;
   const totalPauses = metrics.reduce((s, m) => s + (m.long_pauses ?? 0), 0);
+  const clarityValues = metrics
+    .map((m) => m.clarity)
+    .filter((c): c is number => typeof c === "number" && c > 0);
+  const avgClarity = clarityValues.length
+    ? Math.round(
+        clarityValues.reduce((s, v) => s + v, 0) / clarityValues.length
+      )
+    : null;
 
   const strengths = (report.strengths ?? []) as string[];
   const weaknesses = (report.weaknesses ?? []) as string[];
@@ -185,6 +202,36 @@ export default async function ReportPage({
                   long pauses (&gt;2.5s)
                 </p>
               </div>
+              <div>
+                <div
+                  className={cn(
+                    "text-2xl font-semibold tabular-nums",
+                    totalHedges >= 8
+                      ? "text-amber-600 dark:text-amber-400"
+                      : undefined
+                  )}
+                >
+                  {totalHedges}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  hedges (&ldquo;I think&rdquo;, &ldquo;maybe&rdquo;)
+                </p>
+              </div>
+              {avgClarity !== null && (
+                <div>
+                  <div
+                    className={cn(
+                      "text-2xl font-semibold tabular-nums",
+                      scoreColor(avgClarity, 100)
+                    )}
+                  >
+                    {avgClarity}%
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    speech clarity ({clarityLabel(avgClarity).label})
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

@@ -13,6 +13,7 @@ import {
   Download,
   FileText,
   Flame,
+  FolderGit2,
   Footprints,
   Library,
   Link2,
@@ -24,6 +25,7 @@ import {
   TrendingDown,
   Trophy,
   Users,
+  Volume2,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -82,6 +84,18 @@ const PREP: Feature[] = [
 ];
 
 const INTERVIEW: Feature[] = [
+  {
+    icon: FolderGit2,
+    title: "Interview me on my own code",
+    desc: "Paste a public GitHub repo and the interviewer reads it — file tree, README, key source files — then asks why you built it that way. Real interviewers spend half the loop on your project; this is the only way to rehearse defending code you actually wrote.",
+    href: "/interview/new",
+  },
+  {
+    icon: TrendingDown,
+    title: "Depth ladder — find your ceiling",
+    desc: "One topic, drilled deeper every rung — mechanism, trade-offs, failure modes, internals — stopping the moment you can't go further. Ends by naming the exact concept that stopped you, because depth is what gets people rejected, not breadth.",
+    href: "/interview/new",
+  },
   {
     icon: Mic,
     title: "Voice mock interviews",
@@ -142,7 +156,13 @@ const PROGRESS: Feature[] = [
   {
     icon: BarChart3,
     title: "Delivery coaching",
-    desc: "Filler words, speaking pace and pauses are tracked automatically across your voice interviews, so you can watch your spoken confidence trend upward over time — not just your answer content.",
+    desc: "Filler words, hedging language (\"I think\", \"maybe\"), speaking pace and pauses are tracked automatically across your voice interviews, so you can watch your spoken confidence trend upward over time — not just your answer content.",
+    href: "/dashboard",
+  },
+  {
+    icon: Volume2,
+    title: "Speech clarity score",
+    desc: "Your browser's own speech engine reports how confidently it understood each phrase — a free proxy for how intelligible you actually sounded. If the recognizer struggled with your technical terms, an interviewer on a video call would too.",
     href: "/dashboard",
   },
   {

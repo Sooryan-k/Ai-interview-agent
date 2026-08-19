@@ -113,6 +113,9 @@ export async function POST(
     bar_raiser?: boolean;
     panel?: boolean;
     currency?: string;
+    depth_topic?: string;
+    repo_label?: string;
+    repo_digest?: string;
   };
 
   let topicScope: { title: string; objective: string }[] | undefined;
@@ -177,6 +180,11 @@ export async function POST(
     barRaiser: persona.bar_raiser === true,
     panel: persona.panel === true,
     currency: persona.currency,
+    depthTopic: persona.depth_topic ?? null,
+    repo:
+      persona.repo_digest && persona.repo_label
+        ? { label: persona.repo_label, digest: persona.repo_digest }
+        : null,
   });
   const prompt = transcriptPrompt(history, answer ?? undefined, hint);
 

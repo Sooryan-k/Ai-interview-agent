@@ -34,6 +34,12 @@ cp .env.example .env.local
 # fill in the Supabase + Gemini values
 ```
 
+**Optional — `GITHUB_TOKEN`:** the repo-interview round reads public repos through
+GitHub's API. Unauthenticated that's 60 requests/hour *per IP*, shared across
+serverless instances, so it runs out quickly in production. A classic token with
+**no scopes** (public data only) raises it to 5,000/hour. The feature works
+without it; it just rate-limits sooner.
+
 ### 4. Run
 
 ```bash
@@ -74,9 +80,9 @@ Quota guards (`daily_usage` table, atomic counter) cap per-user interviews/day a
 
 **Prep hub** — generated scratch→expert curriculum, on-demand study materials, module quizzes, cheat-sheet cram mode, question bank.
 **Practice** — spaced repetition (SM-2), daily drill, streaks.
-**Interviews** — voice/text mock rounds (behavioral/technical/system-design/DSA/HR), **bar-raiser** and **panel** modes, **salary-negotiation sim**, **whiteboard round graded by AI vision**, **coding round** (Monaco + free Piston execution), hands-free walk mode, rescue-me hints.
+**Interviews** — voice/text mock rounds (behavioral/technical/system-design/DSA/HR), **repo round** (interviews you on a public GitHub repo you wrote), **depth ladder** (one topic drilled until it finds your knowledge ceiling), **bar-raiser** and **panel** modes, **salary-negotiation sim** with currency choice, **whiteboard round graded by AI vision**, **coding round** (Monaco + free Piston execution), hands-free walk mode, rescue-me hints.
 **Personalization** — resume upload (client-side PDF parse) + skill profile, "roast my resume", STAR **story bank** the interviewer actually references, JD-tailored questions.
-**Insights & retention** — skill radar, weakness heatmap, delivery-coaching trends, XP/levels/badges, shareable reports, PDF export, calendar (.ics) study plan, installable PWA with offline study pages + daily reminders.
+**Insights & retention** — skill radar, weakness heatmap, delivery-coaching trends (filler words, **hedging language**, pace, pauses, **speech-clarity score**), XP/levels/badges, shareable reports, PDF export, calendar (.ics) study plan, installable PWA with offline study pages + daily reminders.
 
 A public `/features` page explains every one of the above in plain language, with each entry linking straight to where it lives in the app.
 
@@ -88,4 +94,5 @@ Everything runs on free tiers. Generated content (curricula, study materials, qu
 npx tsx scripts/verify-protocol.ts   # interview wire protocol (sentinel/eval)
 npx tsx scripts/verify-wave1.ts      # streaks, analytics, schemas
 npx tsx scripts/verify-wave2.ts      # SM-2, XP, ics, schemas
+npx tsx scripts/verify-wave3.ts      # delivery metrics, depth/repo prompts, repo URLs
 ```

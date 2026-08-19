@@ -9,7 +9,9 @@ export interface EvalTurnRow {
   speech_metrics: {
     wpm?: number;
     fillers?: number;
+    hedges?: number;
     long_pauses?: number;
+    clarity?: number | null;
   } | null;
   created_at: string;
 }
@@ -127,7 +129,10 @@ export interface DeliveryPoint {
   label: string; // date
   wpm: number | null;
   fillers: number;
+  hedges: number;
   pauses: number;
+  /** 0-100 avg recognition confidence, null when never measured. */
+  clarity: number | null;
 }
 
 export function aggregateDelivery(
@@ -152,6 +157,9 @@ export function aggregateDelivery(
     const wpms = turns
       .map((t) => t.speech_metrics?.wpm)
       .filter((w): w is number => typeof w === "number" && w > 0);
+    const clarities = turns
+      .map((t) => t.speech_metrics?.clarity)
+      .filter((c): c is number => typeof c === "number" && c > 0);
     points.push({
       label: new Date(iv.started_at).toLocaleDateString(undefined, {
         month: "short",
@@ -164,10 +172,14 @@ export function aggregateDelivery(
         (a, t) => a + (t.speech_metrics?.fillers ?? 0),
         0
       ),
+      hedges: turns.reduce((a, t) => a + (t.speech_metrics?.hedges ?? 0), 0),
       pauses: turns.reduce(
         (a, t) => a + (t.speech_metrics?.long_pauses ?? 0),
         0
       ),
+      clarity: clarities.length
+        ? Math.round(clarities.reduce((a, b) => a + b, 0) / clarities.length)
+        : null,
     });
   }
 
@@ -190,6 +202,12 @@ export function aggregateDelivery(
         last.wpm > 180
           ? `You're averaging ${last.wpm} wpm — a touch fast; interviewers absorb ~130-160 best.`
           : `You're averaging ${last.wpm} wpm — slightly slow; aim for a conversational 130-160.`;
+    }
+    if (!insight && last.hedges >= 5) {
+      insight = `You hedged ${last.hedges} times last round ("I think", "maybe") — state your answer, then caveat if you must.`;
+    }
+    if (!insight && last.clarity !== null && last.clarity < 70) {
+      insight = `Speech clarity was ${last.clarity}% last round — slow down slightly and over-enunciate technical terms.`;
     }
   }
 

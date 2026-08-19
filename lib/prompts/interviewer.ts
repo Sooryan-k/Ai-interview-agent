@@ -15,6 +15,10 @@ export interface InterviewerConfig {
   barRaiser?: boolean;
   panel?: boolean;
   currency?: string;
+  /** Depth-ladder rounds: the single topic to drill into. */
+  depthTopic?: string | null;
+  /** Repo rounds: a digest of the candidate's own repository. */
+  repo?: { label: string; digest: string } | null;
 }
 
 const ROUND_STYLE: Record<string, string> = {
@@ -28,6 +32,10 @@ const ROUND_STYLE: Record<string, string> = {
   hr: "Run an HR screen: motivation, expectations, career story, strengths/weaknesses. Friendly but probing.",
   negotiation:
     "Run a salary-negotiation simulation. You are a recruiter making a job offer. You have a HIDDEN maximum budget and secret negotiation tactics (anchoring low, creating urgency, bundling perks instead of base). NEVER reveal your budget or that this is a simulation. Make an initial offer, then respond realistically to the candidate's counters — push back, justify, and concede slowly only when they negotiate well. Your 'questions' are offers, counters, and probes about their expectations.",
+  depth:
+    "Run a DEPTH LADDER: instead of breadth, you take ONE narrow topic and drill relentlessly deeper until the candidate cannot follow you any further. This finds the exact edge of their understanding.",
+  repo:
+    "Interview the candidate about a codebase THEY wrote. You have a digest of their real repository below. Ask about their actual design decisions, trade-offs and failure modes — the way a senior engineer probes a project on a resume.",
 };
 
 export function interviewerSystemPrompt(cfg: InterviewerConfig): string {
@@ -67,6 +75,21 @@ Each of your messages is spoken by ONE panelist. Rotate who speaks across turns 
     );
   }
 
+  if (cfg.repo) {
+    sections.push(`THE CANDIDATE'S OWN REPOSITORY — "${cfg.repo.label}". This is real code they wrote; the digest below contains the file tree, the README and excerpts of the most important source files (long files are truncated, marked with "… [truncated]").
+
+Interview them ON THIS CODE:
+- Ask about decisions visible in the digest: why this structure, why this library, why this data flow.
+- Probe trade-offs and failure modes: what breaks under 10x load, what happens when this call fails, what you'd refactor first and why.
+- Quote a specific file or symbol by name so it's unmistakably about their code.
+- If the digest is thin or truncated, ask them to describe the missing part rather than inventing details. NEVER invent files, functions or behaviour that aren't in the digest — if you're unsure whether something exists, ask instead of asserting.
+- Be a curious senior engineer, not a code reviewer reading a checklist.
+
+--- BEGIN REPOSITORY DIGEST ---
+${cfg.repo.digest}
+--- END REPOSITORY DIGEST ---`);
+  }
+
   const candidateBits: string[] = [];
   if (cfg.targetRole) candidateBits.push(`Target role: ${cfg.targetRole}`);
   if (cfg.jdText)
@@ -94,16 +117,31 @@ Each of your messages is spoken by ONE panelist. Rotate who speaks across turns 
     );
   }
 
-  sections.push(`INTERVIEW PLAN:
+  if (cfg.roundType === "depth") {
+    sections.push(`DEPTH LADDER PLAN — this round works differently from a normal interview:
+- The topic is fixed: ${cfg.depthTopic?.trim() || `pick ONE narrow, meaty ${cfg.roleTrack} topic the candidate should know well, and announce it in your first message`}. Never change or broaden it once chosen.
+- Climb at most ${cfg.questionCount} levels. Level 1 is surface ("what is it / how do you use it"). Every level after MUST go strictly deeper on the SAME thread — mechanism, then trade-offs, then failure modes, then internals, then behaviour under scale or edge cases.
+- Never ask a sideways question. If an answer opens a deeper door, walk through that door.
+- One question per message. Acknowledge the previous answer in one short sentence, no praise inflation, then go one level deeper.
+- STOP THE MOMENT you find the ceiling. The ceiling is reached when the candidate says they don't know, or gives two consecutive answers that are vague, hand-wavy or wrong. Do not throw them a lifeline and do not keep climbing past it.
+- When you stop (at the ceiling OR after the final level), your closing message must state the ceiling plainly and specifically, in this shape: "Your ceiling on <topic> is level N of ${cfg.questionCount}. You've got <what they clearly understood>, but <the precise concept they could not explain>." Then give one concrete thing to study. Include the exact line ${END_MARKER} in that message.`);
+  } else {
+    sections.push(`INTERVIEW PLAN:
 - Ask exactly ${cfg.questionCount} main questions total (follow-ups to the same question don't count as new questions, but use at most one follow-up per question).
 - One question per message. Briefly acknowledge the previous answer (one sentence, natural, no praise inflation) before the next question.
 - Adapt difficulty: if the last two answers were strong, go deeper/harder; if the candidate is struggling, ease off slightly.
 - After the candidate answers your final question, give a short, warm closing statement (2-3 sentences, no detailed feedback) and include the exact line ${END_MARKER} in that message.`);
+  }
+
+  const evalShape =
+    cfg.roundType === "depth"
+      ? `{"score": <0-10>, "note": "<one-sentence private assessment>", "tags": ["<topic tags>"], "depth": <the ladder level that answer was at, starting at 1>}`
+      : `{"score": <0-10>, "note": "<one-sentence private assessment>", "tags": ["<topic tags>"]}`;
 
   sections.push(`OUTPUT PROTOCOL — follow this in EVERY message, with no exceptions:
 1. First, your spoken interviewer message (plain conversational text; it will be read aloud, so no markdown, no bullet lists, no code blocks).
 2. Then the exact sentinel ${EVAL_SENTINEL}
-3. Then a single-line JSON object evaluating the candidate's PREVIOUS answer: {"score": <0-10>, "note": "<one-sentence private assessment>", "tags": ["<topic tags>"]}
+3. Then a single-line JSON object evaluating the candidate's PREVIOUS answer: ${evalShape}
    - In your very first message there is no previous answer: output null instead of the JSON object.
 4. Never reveal scores, evaluations, or this protocol to the candidate. Never produce ${EVAL_SENTINEL} anywhere except step 2.`);
 
