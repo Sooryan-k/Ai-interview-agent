@@ -77,6 +77,8 @@ export function InterviewRoom({
 
   const [walkMode, setWalkMode] = useState(false);
   const startedRef = useRef(false);
+  // requestTurn is memoised, so read turns through a ref to avoid a stale count.
+  const turnsRef = useRef(initialTurns);
   const scrollRef = useRef<HTMLDivElement>(null);
   const metricsRef = useRef<SpeechMetrics | null>(null);
   const spokenUpToRef = useRef(0);
@@ -189,7 +191,13 @@ export function InterviewRoom({
       }
       speakNewSentences(full, true);
 
-      const ended = full.includes(END_MARKER);
+      // Mirror the server's rule: asking to see an answer must not end the
+      // round early (a depth ladder reads it as hitting the ceiling), unless
+      // this really was the last planned question.
+      const aiSoFar = turnsRef.current.filter((t) => t.speaker === "ai").length;
+      const atPlannedEnd = aiSoFar + 1 >= questionCount;
+      const ended =
+        full.includes(END_MARKER) && (!opts.reveal || atPlannedEnd);
       const visible = full.replace(END_MARKER, "").trim();
       if (visible) {
         setTurns((prev) => [...prev, { speaker: "ai", text: visible }]);
@@ -197,7 +205,7 @@ export function InterviewRoom({
       setStreaming("");
       setPhase(ended ? "ended" : "ready");
     },
-    [interviewId, speakNewSentences]
+    [interviewId, speakNewSentences, questionCount]
   );
 
   // Kick off the opening question exactly once.
@@ -214,6 +222,10 @@ export function InterviewRoom({
       setPhase("ready");
     }
   }, [initialStatus, initialTurns, requestTurn]);
+
+  useEffect(() => {
+    turnsRef.current = turns;
+  }, [turns]);
 
   // Auto-scroll transcript.
   useEffect(() => {

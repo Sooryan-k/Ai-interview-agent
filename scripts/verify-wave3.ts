@@ -22,6 +22,7 @@ import {
   EvalSchema,
   ANSWER_OPEN,
   ANSWER_CLOSE,
+  END_MARKER,
   splitAnswerSegments,
   stripAnswerMarkers,
 } from "@/lib/schemas";
@@ -211,6 +212,21 @@ function main() {
     revealTurn.includes(ANSWER_OPEN) &&
       revealTurn.includes(ANSWER_CLOSE) &&
       /ONLY the answer between the markers/.test(revealTurn)
+  );
+  check(
+    "reveal: forbids ending the interview",
+    /the interview CONTINUES/i.test(revealTurn) &&
+      revealTurn.includes(`Do NOT output ${END_MARKER}`)
+  );
+  check(
+    "reveal: is explicitly not the depth-ladder ceiling",
+    /NOT the candidate's ceiling/i.test(revealTurn)
+  );
+  check(
+    "depth ladder: carves out hints/reveals from its ceiling rule",
+    /EXCEPTION: if the candidate asks for a hint or asks to be shown the answer/.test(
+      depthPrompt
+    ) && /NOT the ceiling/i.test(depthPrompt)
   );
 
   // ---- answer-marker parsing ----

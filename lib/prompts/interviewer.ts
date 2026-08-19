@@ -142,6 +142,7 @@ ${cfg.repo.digest}
 - Never ask a sideways question. If an answer opens a deeper door, walk through that door.
 - One question per message. Acknowledge the previous answer in one short sentence, no praise inflation, then go one level deeper.
 - STOP THE MOMENT you find the ceiling. The ceiling is reached when the candidate says they don't know, or gives two consecutive answers that are vague, hand-wavy or wrong. Do not throw them a lifeline and do not keep climbing past it.
+- EXCEPTION: if the candidate asks for a hint or asks to be shown the answer, that is a learning request, NOT the ceiling. Teach it, then keep climbing — never end the ladder on one of those.
 - When you stop (at the ceiling OR after the final level), your closing message must state the ceiling plainly and specifically, in this shape: "Your ceiling on <topic> is level N of ${cfg.questionCount}. You've got <what they clearly understood>, but <the precise concept they could not explain>." Then give one concrete thing to study. Include the exact line ${END_MARKER} in that message.`);
   } else {
     sections.push(`INTERVIEW PLAN:
@@ -209,7 +210,12 @@ Do all of this in one message:
    - No padding, no restating the question, no "as I mentioned". Dense and memorable — this is the bit they will re-read.
    - Plain spoken prose only (it is read aloud): no markdown, no bullets, no code blocks.
    - Put ONLY the answer between the markers — not the lead-in, not the next question.
-3. Then ask your NEXT question, outside the markers. This counts as a new question.
+3. Then ask your NEXT question, outside the markers, and carry on as normal. In a depth ladder that means the next rung down.
+
+CRITICAL — the interview CONTINUES after this message:
+- Asking to see an answer is a LEARNING request, not a failure and not a refusal to answer.
+- It is NOT the candidate's ceiling. Never treat it as hitting the ceiling, never summarise their level, never wrap up.
+- Do NOT output ${END_MARKER} in this message, unless this was genuinely the final planned question.
 
 Use the ${ANSWER_OPEN} / ${ANSWER_CLOSE} markers exactly once, and only in this message. Because they never answered, output null for the eval JSON instead of an object.`;
   }

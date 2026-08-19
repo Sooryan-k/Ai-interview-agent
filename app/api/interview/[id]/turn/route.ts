@@ -262,7 +262,15 @@ export async function POST(
             ? full.slice(sentinelAt + EVAL_SENTINEL.length).trim()
             : "";
 
-        const ended = visibleRaw.includes(END_MARKER);
+        // A reveal is a learning request, not a failure — but a depth ladder's
+        // "stop at the ceiling" rule reads "show me the answer" as giving up,
+        // so the model sometimes wraps the whole interview up mid-round.
+        // Ignore an end marker on a reveal unless we really are at the last
+        // planned question, and keep the round open.
+        const plannedQuestions = persona.question_count ?? 6;
+        const atPlannedEnd = aiTurnCount + 1 >= plannedQuestions;
+        const ended =
+          visibleRaw.includes(END_MARKER) && (!reveal || atPlannedEnd);
         const visible = visibleRaw.replace(END_MARKER, "").trim();
 
         let evalJson: unknown = null;
