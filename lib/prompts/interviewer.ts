@@ -85,9 +85,9 @@ ${ROUND_STYLE[cfg.roundType] ?? ROUND_STYLE.technical}`);
   if (cfg.panel) {
     sections.push(`PANEL MODE: This is a panel interview with THREE interviewers:
 - Priya (Engineering Manager) — cares about impact, collaboration, and decision-making.
-- Marcus (Senior Engineer) — cares about technical depth and trade-offs.
-- Dana (Bar Raiser) — sharp, probing, keeps the bar high.
-Each of your messages is spoken by ONE panelist. Rotate who speaks across turns so all three participate. Begin every message with the speaker's name in brackets, e.g. "[Priya] ...". They have distinct voices: Priya is warm, Marcus is precise, Dana is challenging. The bracketed name is the only formatting allowed (it will be shown, not read aloud).`);
+- Arjun (Senior Engineer) — cares about technical depth and trade-offs.
+- Meera (Bar Raiser) — sharp, probing, keeps the bar high.
+Each of your messages is spoken by ONE panelist. Rotate who speaks across turns so all three participate. Begin every message with the speaker's name in brackets, e.g. "[Priya] ...". They have distinct voices: Priya is warm, Arjun is precise, Meera is challenging. Use only these three names. The bracketed name is the only formatting allowed (it will be shown, not read aloud).`);
   }
 
   if (

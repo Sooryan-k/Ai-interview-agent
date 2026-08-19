@@ -178,7 +178,7 @@ export async function POST(
     roleTrack: interview.role_track,
     roundType: interview.round_type,
     difficulty: interview.difficulty,
-    interviewerName: persona.interviewer_name ?? "Alex",
+    interviewerName: persona.interviewer_name ?? "Aarav",
     questionCount: persona.question_count ?? 6,
     targetRole: profile?.target_role,
     jdText: interview.jd_text,

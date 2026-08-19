@@ -35,11 +35,25 @@ export function stripSpeakerTag(text: string, isPanel: boolean): string {
 
 /**
  * The interviewer personas this app creates, so the avatar matches the name
- * rather than guessing. Everything else falls through to the male face —
- * these are the only names the prompts ever produce (panel personas plus the
- * solo interviewer pool), so there is no open-ended name guessing here.
+ * rather than guessing. Everything else falls through to the male face.
+ * The first three are the panel personas; the rest are the solo interviewer
+ * pool. A few extra common names are listed so an avatar still lands
+ * correctly if the model ever strays from the roster.
  */
-const FEMALE_PERSONAS = new Set(["priya", "dana", "sofia", "amara"]);
+const FEMALE_PERSONAS = new Set([
+  "priya",
+  "meera",
+  "ananya",
+  "divya",
+  "kavya",
+  "aditi",
+  "sneha",
+  "anjali",
+  "neha",
+  "pooja",
+  "riya",
+  "shreya",
+]);
 
 export function panelistEmoji(name: string): string {
   return FEMALE_PERSONAS.has(name.trim().toLowerCase()) ? "👩" : "👨";

@@ -97,7 +97,7 @@ function main() {
     roleTrack: "Postgres",
     roundType: "depth",
     difficulty: "medium",
-    interviewerName: "Alex",
+    interviewerName: "Aarav",
     questionCount: 8,
     depthTopic: "database indexing",
   });
@@ -116,7 +116,7 @@ function main() {
     roleTrack: "React",
     roundType: "technical",
     difficulty: "medium",
-    interviewerName: "Alex",
+    interviewerName: "Aarav",
     questionCount: 6,
   });
   check(
@@ -134,7 +134,7 @@ function main() {
       roleTrack: "React",
       roundType,
       difficulty,
-      interviewerName: "Alex",
+      interviewerName: "Aarav",
       questionCount: 6,
     });
   const easy = mk("easy");
@@ -371,12 +371,12 @@ function main() {
   );
   check(
     "panel: tag never reaches text-to-speech",
-    stripSpeakerTag("[Marcus] Explain indexes.", true) === "Explain indexes."
+    stripSpeakerTag("[Arjun] Explain indexes.", true) === "Explain indexes."
   );
   check(
     "panel: a half-streamed tag is hidden too",
     stripSpeakerTag("[Mar", true) === "" &&
-      stripSpeakerTag("[Marcus]", true) === ""
+      stripSpeakerTag("[Arjun]", true) === ""
   );
   check(
     "panel: solo rounds never strip (a real bracket must survive)",
@@ -384,13 +384,13 @@ function main() {
   );
   check(
     "panel: female personas get the female face",
-    ["Priya", "Dana", "Sofia", "Amara"].every(
+    ["Priya", "Meera", "Ananya", "Divya"].every(
       (n) => panelistEmoji(n) === "👩"
     )
   );
   check(
     "panel: everyone else gets the male face",
-    ["Marcus", "Ken", "Alex", "Jordan"].every(
+    ["Arjun", "Aarav", "Rohan", "Vikram"].every(
       (n) => panelistEmoji(n) === "👨"
     )
   );
@@ -400,7 +400,7 @@ function main() {
   );
   check(
     "panel: only ever a person emoji, never a role object",
-    ["Priya", "Marcus", "Dana", "Jordan"].every((n) =>
+    ["Priya", "Arjun", "Meera", "Aarav"].every((n) =>
       ["👩", "👨"].includes(panelistEmoji(n))
     )
   );
@@ -410,7 +410,7 @@ function main() {
     roleTrack: "React",
     roundType: "technical",
     difficulty: "medium",
-    interviewerName: "Sofia",
+    interviewerName: "Priya",
     questionCount: 12,
   });
   check(
@@ -421,7 +421,7 @@ function main() {
     roleTrack: "React",
     roundType: "technical",
     difficulty: "medium",
-    interviewerName: "Sofia",
+    interviewerName: "Priya",
     questionCount: 12,
     panel: true,
   });
@@ -443,7 +443,7 @@ function main() {
     roleTrack: "TypeScript",
     roundType: "repo",
     difficulty: "medium",
-    interviewerName: "Alex",
+    interviewerName: "Aarav",
     questionCount: 6,
     repo: { label: "me/proj", digest: "FILE TREE:\nsrc/index.ts" },
   });

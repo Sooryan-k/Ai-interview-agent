@@ -379,7 +379,7 @@ const mockCodeReview = {
 function mockTurn(turnIdx: number): string {
   const turns = [
     // First AI turn: greeting + first question, eval is null (no prior answer).
-    `Hi, I'm Alex — I'll be running your technical screen today. Let's ease in: can you explain the difference between let, const and var in JavaScript, and when you'd reach for each?${EVAL_SENTINEL}null`,
+    `Hi — I'll be running your technical screen today. Let's ease in: can you explain the difference between let, const and var in JavaScript, and when you'd reach for each?${EVAL_SENTINEL}null`,
     `Good — you touched on scoping, which is the core of it. Follow-up: what actually happens when you access a let variable before its declaration, and why?${EVAL_SENTINEL}{"score": 7, "note": "Solid scoping explanation with an example; missed the temporal dead zone.", "tags": ["javascript", "scoping"]}`,
     `Nice. Let's switch gears to async. Walk me through what this logs and why: a Promise.resolve().then vs a setTimeout with delay 0.${EVAL_SENTINEL}{"score": 6, "note": "Correct on hoisting mechanics, hesitant on TDZ terminology.", "tags": ["javascript", "hoisting"]}`,
     `That's a reasonable mental model. Thanks — that's all we have time for today. You showed solid fundamentals; we'll put together detailed feedback now.\n${END_MARKER}${EVAL_SENTINEL}{"score": 7, "note": "Got microtask vs macrotask ordering right at a high level.", "tags": ["javascript", "event-loop"]}`,
