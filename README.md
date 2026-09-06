@@ -86,17 +86,87 @@ Quota guards (`daily_usage` table, atomic counter) cap global calls/day. The **p
 - `lib/schemas.ts` — Zod schemas **and** the wire protocol: the `<<<EVAL>>>` sentinel, the end marker, and the `<ANS>` tags that highlight a revealed answer (with repair for malformed variants)
 - SEO/branding: `app/icon.tsx`, `app/apple-icon.tsx`, `app/opengraph-image.tsx` and `app/twitter-image.tsx` generate the favicon, home-screen icon and social-share cards from code (via `next/og`) instead of static image files, so they always match the brand mark. `app/robots.ts` and `app/sitemap.ts` generate `/robots.txt` and `/sitemap.xml`. All four (plus `metadataBase` in `app/layout.tsx`) hardcode a `SITE_URL` constant — update it if you move off `dryrunai.vercel.app` to a custom domain.
 
-## Feature map
+## Every feature
 
-**Prep hub** — generated scratch→expert curriculum, on-demand study materials, module quizzes, cheat-sheet cram mode, question bank.
-**Practice** — spaced repetition (SM-2), daily drill, streaks.
-**Interviews** — voice/text mock rounds (behavioral/technical/system-design/DSA/HR), **repo round** (interviews you on a public GitHub repo you wrote), **depth ladder** (one topic drilled until it finds your knowledge ceiling), **bar-raiser** and **panel** modes, **salary-negotiation sim** with currency choice, **whiteboard round graded by AI vision**, **coding round** (Monaco + free Piston execution), hands-free walk mode.
-**In-round help** — *rescue me* hints that nudge without giving it away, and *show me the answer*, which teaches the answer in two or three sentences (highlighted in place), then carries on with the next question. Easy and medium rounds ramp from fundamentals upward rather than opening at senior level; hard opens at the bar and stays there.
-**Panel rounds** — three interviewers (Priya, Arjun, Meera) take turns, each shown with their own avatar and name beside the message, and each speaking in their own voice.
-**Personalization** — resume upload (client-side PDF parse) + skill profile, "roast my resume", STAR **story bank** the interviewer actually references, JD-tailored questions.
-**Insights & retention** — skill radar, weakness heatmap, delivery-coaching trends (filler words, **hedging language**, pace, pauses, **speech-clarity score**), XP/levels/badges, shareable reports, PDF export, calendar (.ics) study plan, installable PWA with offline study pages + daily reminders.
+The in-app [`/features`](app/features/page.tsx) page explains all of these in plain language, each linking straight to where it lives.
 
-A public `/features` page explains every one of the above in plain language, with each entry linking straight to where it lives in the app.
+### Learning path
+| Feature | What it does |
+|---|---|
+| Scratch → expert roadmap | Pick a stack and where you're starting; generates levels → modules → topics, sequenced so each builds on the last |
+| Study materials | Written notes per topic, generated once and cached globally — so re-reading costs nothing |
+| Cheat sheets | A one-page skim per topic, for the hour before an interview |
+| Checkpoint quizzes | Multiple-choice and short-answer checks after each module, with explanations |
+| Cram mode | Every cheat sheet you've unlocked for a path, on one printable page |
+| Question bank | Every question the app has ever asked, across all users — searchable, filterable by round type and difficulty, one click into your practice deck |
+| Progress tracking | Per-topic todo / learning / mastered state, with level progress bars |
+| Multiple stacks | Run several prep paths at once and switch between them |
+
+### Interview rounds
+| Round | What it does |
+|---|---|
+| Voice mock interview | Speaks questions aloud, listens to spoken answers, and adapts follow-ups to what you actually said. Typing always works too |
+| **Repo round** | Reads a public GitHub repo you wrote — file tree, README, key source files — then asks why *you* built it that way |
+| **Depth ladder** | One topic, a rung deeper every turn, stopping at your ceiling and naming the exact concept that stopped you |
+| Whiteboard round | Draw a system design on a canvas; the AI grades the actual diagram via vision — components, bottlenecks, missing pieces, follow-up questions |
+| Coding round | In-browser Monaco editor, Python or JavaScript, runs real test cases through the free Piston API, then reviews correctness, complexity and a cleaner approach |
+| Salary negotiation sim | A recruiter with a hidden budget, in any of 10 currencies. Practise anchoring, countering, and not conceding first |
+| Technical / behavioral / system design / DSA / HR | The standard round types, each with its own questioning style |
+| Bar-raiser mode | An add-on that makes any round relentlessly demanding and strictly scored |
+| Panel mode | Three interviewers (Priya, Arjun, Meera) rotate — each with their own avatar, name and **speaking voice** |
+| Walk mode | Fully hands-free: it speaks, auto-listens, and auto-submits after a pause — for pacing around while you think |
+| Level-scoped rounds | Launch an interview from a curriculum level so questions stay on what you've been studying |
+| JD-tailored rounds | Paste a job description to steer the questions |
+
+### While the round is running
+| Feature | What it does |
+|---|---|
+| Rescue me (hint) | Nudges you toward the idea without giving it away, then re-asks the same question |
+| Show me the answer | Teaches the answer in 2–3 sentences, highlighted in place, then moves on to the next question |
+| Difficulty ramp | Easy and medium rounds open at "what is X" and climb one step at a time; hard opens at the senior bar |
+| Voice controls | Mute/unmute, male or female interviewer voice with a preview, remembered per device |
+| Question counter | 10 / 12 / 15 questions by difficulty, with a hard stop so a round always ends |
+| End early | The interviewer signs off properly first, then you get the report |
+| Resume mid-round | Close the tab and come back — transcript and progress are saved |
+| Live transcript | Every question and answer on screen as it happens, with answers highlighted |
+
+### After the round
+| Feature | What it does |
+|---|---|
+| Report card | Overall score, strengths, weaknesses, and a model answer for every question |
+| Delivery coaching | Filler words, **hedging language**, words per minute, long pauses and a **speech-clarity score** — all computed in the browser at zero AI cost |
+| Skill radar | Average score per skill across all your interviews |
+| Weakness heatmap | Skill × interview grid, weakest first, so you can see what isn't improving |
+| Transcript replay | Re-listen to the whole interview, each panelist announced by name |
+| Shareable report | A read-only public link — no login needed to view it |
+| Print / PDF export | Print-tuned stylesheet on the report page |
+| Restudy link | Jump from the report straight back into your roadmap |
+
+### Practice & habit
+| Feature | What it does |
+|---|---|
+| Spaced repetition | SM-2 scheduling — questions you missed resurface right before you'd forget them |
+| Daily drill | One 60-second question a day to keep the habit alive |
+| Streaks | Day counter that ignores a same-day revisit and resets on a gap |
+| XP & levels | Earned from real actions: interviews completed, quizzes passed, topics mastered, cards reviewed, stories polished |
+| Badges | Eight unlockables — First Round, Week Warrior, High Scorer, Quiz Master, Storyteller, The Grinder, Scholar, Veteran |
+| Story bank | Your real experiences polished into STAR format; behavioral rounds reference and probe them directly |
+| Study plan export | A two-week `.ics` calendar of study blocks for your unfinished topics |
+| Daily reminders | Opt-in, once-a-day local browser nudge — no push service, no background tracking |
+| Always current | A daily cron ingests Hacker News + dev.to so the interviewer knows about recent releases |
+
+### Account & platform
+| Feature | What it does |
+|---|---|
+| Passwordless auth | Magic link or Google OAuth — no passwords to store or leak |
+| Usernames | Unique handle, collected through a one-time gate since passwordless signup has no form to put it on |
+| Resume upload | Parsed in the browser, feeds a skill profile and tailors questions |
+| "Roast my resume" | A blunt, funny critique with concrete fixes |
+| Delete your data | Remove individual interviews (cascading to transcript and report) or whole prep paths from the dashboard |
+| Dark / light theme | System-aware, with a manual toggle |
+| Installable PWA | Add to home screen; already-visited study pages keep working offline |
+| Responsive | Built and verified down to 390px |
+| SEO | Generated favicon, home-screen icon, OG/Twitter share cards, `robots.txt` and `sitemap.xml` |
 
 Everything runs on free tiers. Generated content (curricula, study materials, quizzes, question bank) is cached globally, so the marginal AI cost of a new user trends toward zero — they read caches the first user paid for. Interviews are the only genuinely per-user cost, and they're currently capped by the global budget alone.
 
