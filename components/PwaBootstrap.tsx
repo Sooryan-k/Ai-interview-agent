@@ -25,7 +25,7 @@ export function PwaBootstrap() {
           localStorage.setItem("dryrun-ai:lastDrillNotify", today);
           new Notification("dryrun AI", {
             body: "Your daily drill is ready — keep your streak alive 🔥",
-            icon: "/icon.svg",
+            icon: "/mark.svg",
           });
         }
       }

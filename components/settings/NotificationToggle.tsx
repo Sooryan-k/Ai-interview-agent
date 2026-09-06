@@ -26,7 +26,7 @@ export function NotificationToggle() {
         toast.success("Daily reminders on — we'll nudge you once a day.");
         new Notification("dryrun AI", {
           body: "You're all set — see you at your next drill 🔥",
-          icon: "/icon.svg",
+          icon: "/mark.svg",
         });
       } else {
         toast.info("No problem — you can enable them anytime.");
