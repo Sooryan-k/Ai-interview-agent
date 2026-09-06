@@ -88,7 +88,11 @@ Quota guards (`daily_usage` table, atomic counter) cap global calls/day. The **p
 
 ## Every feature
 
-The in-app [`/features`](app/features/page.tsx) page explains all of these in plain language, each linking straight to where it lives.
+This is the complete list, taken from the code. The in-app
+[`/features`](app/features/page.tsx) page covers the headline ones in plain
+language for signed-out visitors, each linking straight to where it lives —
+it's a shop window, not an exhaustive index, so a few of the smaller in-round
+helpers below only appear here.
 
 ### Learning path
 | Feature | What it does |
@@ -158,6 +162,8 @@ The in-app [`/features`](app/features/page.tsx) page explains all of these in pl
 ### Account & platform
 | Feature | What it does |
 |---|---|
+| Free, no catch | No paywall, no card, no premium tier holding features back — the whole app runs on free infrastructure |
+| Voice stays local | Speech recognition and synthesis both run on the browser's own APIs; audio is never uploaded or stored, only the transcribed text is scored |
 | Passwordless auth | Magic link or Google OAuth — no passwords to store or leak |
 | Usernames | Unique handle, collected through a one-time gate since passwordless signup has no form to put it on |
 | Resume upload | Parsed in the browser, feeds a skill profile and tailors questions |
