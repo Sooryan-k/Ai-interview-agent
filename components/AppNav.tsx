@@ -9,11 +9,11 @@ import {
   LogOut,
   Menu,
   Settings,
-  Target,
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/BrandMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -90,7 +90,7 @@ export function AppNav() {
           onClick={() => setOpen(false)}
         >
           <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Target className="size-4" />
+            <BrandMark className="size-4" />
           </span>
           <span className="text-sm font-bold tracking-tight">dryrun AI</span>
         </Link>

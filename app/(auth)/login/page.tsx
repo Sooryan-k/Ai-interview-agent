@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Target } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { BrandMark } from "@/components/BrandMark";
 
 export default async function LoginPage() {
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -22,7 +22,7 @@ export default async function LoginPage() {
       />
       <Link href="/" className="relative flex items-center gap-2">
         <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-          <Target className="size-5" />
+          <BrandMark className="size-5" />
         </span>
         <span className="text-lg font-bold tracking-tight">dryrun AI</span>
       </Link>

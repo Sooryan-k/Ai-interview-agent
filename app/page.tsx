@@ -7,9 +7,9 @@ import {
   Map,
   Mic,
   PenTool,
-  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/BrandMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { createClient } from "@/lib/supabase/server";
 
@@ -80,7 +80,7 @@ export default async function Home() {
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
             <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <Target className="size-4" />
+              <BrandMark className="size-4" />
             </span>
             <span className="text-sm font-bold tracking-tight">dryrun AI</span>
           </Link>

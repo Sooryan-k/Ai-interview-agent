@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Mic, Target } from "lucide-react";
+import { Mic } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 
 const PRODUCT_LINKS = [
   { href: "/features", label: "All features" },
@@ -41,7 +42,7 @@ export function Footer() {
           <div className="space-y-3">
             <Link href="/" className="flex items-center gap-2">
               <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
-                <Target className="size-4" />
+                <BrandMark className="size-4" />
               </span>
               <span className="text-sm font-bold tracking-tight">
                 dryrun AI
