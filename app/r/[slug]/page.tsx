@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -29,6 +30,17 @@ function scoreColor(score: number, outOf: number) {
  * Public, read-only report page. Access is gated by the unguessable slug —
  * only reports the owner explicitly shared have one. No login required.
  */
+/**
+ * A share link is meant for the person it was sent to, not for search. The
+ * page stays crawlable (robots.txt allows /r/) precisely so this noindex is
+ * seen — blocking it in robots.txt instead would let the URL be indexed
+ * from an inbound link without Google ever reading this directive.
+ */
+export const metadata: Metadata = {
+  title: "Shared interview report",
+  robots: { index: false, follow: false, nocache: true },
+};
+
 export default async function SharedReportPage({
   params,
 }: {

@@ -8,10 +8,17 @@ import {
   Mic,
   PenTool,
 } from "lucide-react";
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/BrandMark";
+import { JsonLd } from "@/components/JsonLd";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { createClient } from "@/lib/supabase/server";
+import { organizationSchema, webApplicationSchema } from "@/lib/site";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const FEATURES = [
   {
@@ -75,6 +82,8 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <JsonLd data={webApplicationSchema()} />
+      <JsonLd data={organizationSchema()} />
       {/* Top bar */}
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">

@@ -1,9 +1,17 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { BrandMark } from "@/components/BrandMark";
+
+export const metadata: Metadata = {
+  title: "Sign in",
+  description:
+    "Sign in to dryrun AI with a magic link or Google — no password needed — and pick up your interview prep where you left off.",
+  alternates: { canonical: "/login" },
+};
 
 export default async function LoginPage() {
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {

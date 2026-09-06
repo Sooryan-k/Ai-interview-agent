@@ -31,11 +31,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/BrandMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
+
+const FEATURES_DESCRIPTION =
+  "Every feature in dryrun AI, explained: generated prep paths, voice mock interviews, whiteboard and coding rounds, repo interviews, the depth ladder, negotiation sims, delivery analytics and streaks — all free.";
 
 export const metadata: Metadata = {
-  title: "Features — dryrun AI",
-  description:
-    "Every feature in dryrun AI, explained: prep paths, voice/whiteboard/coding interviews, negotiation sims, analytics, streaks and more.",
+  // Just "Features" — the root layout's template appends "— dryrun AI".
+  // Spelling it out here produced "Features — dryrun AI — dryrun AI".
+  title: "Features",
+  description: FEATURES_DESCRIPTION,
+  alternates: { canonical: "/features" },
+  openGraph: {
+    type: "website",
+    url: `${SITE_URL}/features`,
+    title: `Features — ${SITE_NAME}`,
+    description: FEATURES_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Features — ${SITE_NAME}`,
+    description: FEATURES_DESCRIPTION,
+  },
 };
 
 interface Feature {
