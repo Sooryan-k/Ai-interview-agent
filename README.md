@@ -20,7 +20,8 @@ Sign in, pick your stack, and the agent prepares **everything** for your intervi
 2. In the SQL editor, run **each** migration in order:
    [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), then
    [`supabase/migrations/0002_stories.sql`](supabase/migrations/0002_stories.sql), then
-   [`supabase/migrations/0003_username.sql`](supabase/migrations/0003_username.sql).
+   [`supabase/migrations/0003_username.sql`](supabase/migrations/0003_username.sql), then
+   [`supabase/migrations/0004_role_and_stacks.sql`](supabase/migrations/0004_role_and_stacks.sql).
 3. Auth → Providers: enable **Email** (magic link works out of the box). Optionally enable **Google** (add OAuth credentials).
 4. Auth → URL Configuration: add `http://localhost:3000/**` (and your Vercel URL later) to redirect URLs.
 5. Project Settings → API: copy the URL, `anon` key, and `service_role` key.
@@ -83,6 +84,8 @@ Quota guards (`daily_usage` table, atomic counter) cap global calls/day. The **p
 - `lib/github.ts` — builds the repo digest deterministically (tree + README + highest-signal files), so the repo round adds **zero** AI cost beyond its turns
 - `lib/panel.ts` — parses the `[Name]` speaker tag out of panel messages: it becomes the avatar and picks the voice, and is never read aloud
 - `lib/speech/delivery.ts` — filler/hedge counting and the clarity score, all pure functions with no AI call
+- `lib/stacks.ts` / `lib/roles.ts` — the tech catalog (200 atomic entries with official names, search aliases and categories) and the target-role list. Both are plain data: adding an entry needs no UI change. Profiles store stack **ids**, never display names, so a rename can't orphan saved data
+- `scripts/migrate-stacks.ts` — backfills existing users' free-text stack labels into catalog ids via the alias table. Dry run by default; reports unmatched fragments instead of dropping them
 - `lib/schemas.ts` — Zod schemas **and** the wire protocol: the `<<<EVAL>>>` sentinel, the end marker, and the `<ANS>` tags that highlight a revealed answer (with repair for malformed variants)
 - SEO/branding: `app/icon.tsx`, `app/apple-icon.tsx`, `app/opengraph-image.tsx` and `app/twitter-image.tsx` generate the favicon, home-screen icon and social-share cards from code (via `next/og`) instead of static image files, so they always match the brand mark. `app/robots.ts` and `app/sitemap.ts` generate `/robots.txt` and `/sitemap.xml`. All four (plus `metadataBase` in `app/layout.tsx`) hardcode a `SITE_URL` constant — update it if you move off `dryrunai.vercel.app` to a custom domain.
 
@@ -183,4 +186,5 @@ npx tsx scripts/verify-protocol.ts   # interview wire protocol (sentinel/eval)
 npx tsx scripts/verify-wave1.ts      # streaks, analytics, schemas
 npx tsx scripts/verify-wave2.ts      # SM-2, XP, ics, schemas
 npx tsx scripts/verify-wave3.ts      # delivery metrics, depth/repo prompts, repo URLs
+npx tsx scripts/verify-stacks.ts     # tech catalog + role integrity
 ```

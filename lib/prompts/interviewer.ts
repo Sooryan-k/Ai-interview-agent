@@ -4,6 +4,7 @@ import {
   ANSWER_OPEN,
   ANSWER_CLOSE,
 } from "@/lib/schemas";
+import { roleById } from "@/lib/roles";
 
 export interface InterviewerConfig {
   roleTrack: string;
@@ -20,6 +21,14 @@ export interface InterviewerConfig {
   barRaiser?: boolean;
   panel?: boolean;
   currency?: string;
+  /** Target-role id from lib/roles.ts — sets scenario type and question balance. */
+  roleId?: string | null;
+  /** Free text when roleId is "other". */
+  roleOther?: string | null;
+  /** The candidate's selected technologies, official names. */
+  stacks?: string[];
+  /** The one they nominated as primary, if any. */
+  primaryStack?: string | null;
   /** Depth-ladder rounds: the single topic to drill into. */
   depthTopic?: string | null;
   /** Repo rounds: a digest of the candidate's own repository. */
@@ -115,6 +124,29 @@ Interview them ON THIS CODE:
 --- BEGIN REPOSITORY DIGEST ---
 ${cfg.repo.digest}
 --- END REPOSITORY DIGEST ---`);
+  }
+
+  // The role decides scenario type and the coding / design / behavioural mix.
+  const role = roleById(cfg.roleId);
+  if (role) {
+    const named =
+      role.id === "other" && cfg.roleOther?.trim()
+        ? `${cfg.roleOther.trim()} (self-described)`
+        : role.name;
+    sections.push(
+      `TARGET ROLE — ${named}. ${role.emphasis}\nPitch every question at what this role is actually hired to do; don't drift into another discipline's territory.`
+    );
+  }
+
+  if (cfg.stacks && cfg.stacks.length > 0) {
+    const primary = cfg.primaryStack;
+    sections.push(
+      `THE CANDIDATE'S STACK: ${cfg.stacks.join(", ")}.${
+        primary
+          ? ` Their primary technology is ${primary} — weight questions toward it.`
+          : ""
+      }\nStay inside this list. If you need a concept that isn't listed, frame it in terms of one that is rather than quizzing them on a technology they never claimed.`
+    );
   }
 
   const candidateBits: string[] = [];

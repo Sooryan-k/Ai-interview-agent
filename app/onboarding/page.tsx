@@ -10,22 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RoleSelect } from "@/components/stacks/RoleSelect";
+import { StackPicker } from "@/components/stacks/StackPicker";
+import { MAX_STACKS, stackName } from "@/lib/stacks";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-const STACK_PRESETS = [
-  "React + TypeScript",
-  "React + Node.js (Full-Stack)",
-  "Node.js + Express (Backend)",
-  "Python + Django",
-  "Python (Data Science & ML)",
-  "Java + Spring Boot",
-  "Go (Backend)",
-  "DevOps (Docker, Kubernetes, AWS)",
-];
 
 const EXPERIENCE_LEVELS = [
   {
@@ -47,15 +38,19 @@ const EXPERIENCE_LEVELS = [
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [stack, setStack] = useState<string>("");
-  const [customStack, setCustomStack] = useState("");
+  const [roleId, setRoleId] = useState<string | null>(null);
+  const [roleOther, setRoleOther] = useState("");
+  const [stackIds, setStackIds] = useState<string[]>([]);
+  const [primaryStackId, setPrimaryStackId] = useState<string | null>(null);
   const [experience, setExperience] = useState("beginner");
-  const [targetRole, setTargetRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [pct, setPct] = useState(0);
   const [stageMsg, setStageMsg] = useState("Starting…");
 
-  const effectiveStack = stack === "__custom__" ? customStack.trim() : stack;
+  // The curriculum is still built per-stack. The primary (or first) selection
+  // decides which path gets generated; the rest shape interview questions.
+  const curriculumStackId = primaryStackId ?? stackIds[0] ?? null;
+  const effectiveStack = curriculumStackId ? stackName(curriculumStackId) : "";
 
   function fail(message: string) {
     toast.error(message);
@@ -64,11 +59,43 @@ export default function OnboardingPage() {
   }
 
   async function submit() {
-    if (!effectiveStack) {
-      toast.error("Pick a stack (or type your own)");
+    if (stackIds.length === 0) {
+      toast.error("Pick at least one technology.");
       return;
     }
+    if (stackIds.length > MAX_STACKS) {
+      toast.error(`Pick at most ${MAX_STACKS} technologies.`);
+      return;
+    }
+    if (!roleId) {
+      toast.error("Pick your target role.");
+      return;
+    }
+    if (roleId === "other" && !roleOther.trim()) {
+      toast.error("Tell us your role.");
+      return;
+    }
+
     setLoading(true);
+    setPct(2);
+    setStageMsg("Saving your profile…");
+
+    // Persist role + stacks first, so they survive even if curriculum
+    // generation fails or the user closes the tab mid-build.
+    try {
+      const save = await fetch("/api/profile/stacks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roleId, roleOther, stackIds, primaryStackId }),
+      });
+      if (!save.ok) {
+        const d = await save.json().catch(() => ({}));
+        return fail(d.message || "Couldn't save your selection.");
+      }
+    } catch {
+      return fail("Network error — please try again.");
+    }
+
     setPct(4);
     setStageMsg("Checking for an existing path…");
 
@@ -77,11 +104,7 @@ export default function OnboardingPage() {
       res = await fetch("/api/curriculum", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          stack: effectiveStack,
-          experience,
-          targetRole: targetRole.trim() || undefined,
-        }),
+        body: JSON.stringify({ stack: effectiveStack, experience }),
       });
     } catch {
       return fail("Network error — please try again.");
@@ -155,45 +178,43 @@ export default function OnboardingPage() {
         </CardHeader>
         <CardContent className="space-y-8">
           <section className="space-y-3">
-            <Label className="text-base">1. Choose your stack</Label>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {STACK_PRESETS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setStack(p)}
-                  className={cn(
-                    "rounded-md border p-3 text-left text-sm transition-colors hover:bg-accent",
-                    stack === p && "border-primary bg-accent"
-                  )}
-                >
-                  {p}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setStack("__custom__")}
-                className={cn(
-                  "rounded-md border border-dashed p-3 text-left text-sm text-muted-foreground transition-colors hover:bg-accent",
-                  stack === "__custom__" && "border-primary bg-accent"
-                )}
-              >
-                Something else…
-              </button>
-            </div>
-            {stack === "__custom__" && (
-              <Input
-                placeholder="e.g. Rust + WebAssembly, Flutter, Android/Kotlin…"
-                value={customStack}
-                onChange={(e) => setCustomStack(e.target.value)}
-                maxLength={80}
-                autoFocus
-              />
+            <Label className="text-base">1. What role are you targeting?</Label>
+            <RoleSelect
+              value={roleId}
+              onChange={setRoleId}
+              otherValue={roleOther}
+              onOtherChange={setRoleOther}
+            />
+          </section>
+
+          <section className="space-y-3">
+            <Label className="text-base">
+              2. Which technologies?{" "}
+              <span className="text-sm font-normal text-muted-foreground">
+                Pick 1–{MAX_STACKS} — one is fine
+              </span>
+            </Label>
+            <StackPicker
+              value={stackIds}
+              onChange={setStackIds}
+              primaryId={primaryStackId}
+              onPrimaryChange={setPrimaryStackId}
+              roleId={roleId}
+            />
+            {curriculumStackId && (
+              <p className="text-xs text-muted-foreground">
+                Your study path will be built for{" "}
+                <strong className="text-foreground">{effectiveStack}</strong>
+                {stackIds.length > 1 &&
+                  " — the rest shape your interview questions"}
+                . Star a technology above to make it the one your path is built
+                for.
+              </p>
             )}
           </section>
 
           <section className="space-y-3">
-            <Label className="text-base">2. Where are you today?</Label>
+            <Label className="text-base">3. Where are you today?</Label>
             <RadioGroup value={experience} onValueChange={setExperience}>
               {EXPERIENCE_LEVELS.map((lvl) => (
                 <label
@@ -217,18 +238,6 @@ export default function OnboardingPage() {
             </RadioGroup>
           </section>
 
-          <section className="space-y-3">
-            <Label htmlFor="role" className="text-base">
-              3. Target role <span className="text-muted-foreground">(optional)</span>
-            </Label>
-            <Input
-              id="role"
-              placeholder="e.g. Senior Frontend Engineer at a startup"
-              value={targetRole}
-              onChange={(e) => setTargetRole(e.target.value)}
-              maxLength={120}
-            />
-          </section>
 
           {loading ? (
             <div className="space-y-3 rounded-lg border bg-muted/30 p-4">

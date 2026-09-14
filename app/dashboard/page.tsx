@@ -26,6 +26,7 @@ import {
   type EvalTurnRow,
 } from "@/lib/analytics";
 import { LevelPanel } from "@/components/dashboard/LevelPanel";
+import { RolePrompt } from "@/components/stacks/RolePrompt";
 import { PrepPathsList } from "@/components/dashboard/PrepPathsList";
 import { RecentInterviews } from "@/components/dashboard/RecentInterviews";
 import type { XpInputs } from "@/lib/xp";
@@ -202,6 +203,8 @@ export default async function DashboardPage() {
           ) : undefined
         }
       >
+
+        <RolePrompt />
 
         <div className="grid gap-4 md:grid-cols-2">
           <DailyDrill />

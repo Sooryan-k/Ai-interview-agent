@@ -8,6 +8,7 @@ import { UsernameForm } from "@/components/settings/UsernameForm";
 import { ResumeUpload } from "@/components/settings/ResumeUpload";
 import { NotificationToggle } from "@/components/settings/NotificationToggle";
 import { VoicePicker } from "@/components/interview/VoicePicker";
+import { ProfileStacksForm } from "@/components/stacks/ProfileStacksForm";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,7 +28,9 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, username, resume_struct, resume_text")
+    .select(
+      "display_name, username, resume_struct, resume_text, role_id, role_other, stack_ids, primary_stack_id"
+    )
     .eq("id", user.id)
     .maybeSingle();
 
@@ -46,6 +49,15 @@ export default async function SettingsPage() {
         <DisplayNameForm initial={profile?.display_name ?? ""} />
 
         <UsernameForm initial={profile?.username ?? ""} />
+
+        <ProfileStacksForm
+          initial={{
+            roleId: profile?.role_id ?? null,
+            roleOther: profile?.role_other ?? "",
+            stackIds: profile?.stack_ids ?? [],
+            primaryStackId: profile?.primary_stack_id ?? null,
+          }}
+        />
 
         <ResumeUpload
           initialStruct={parsedStruct.success ? parsedStruct.data : null}

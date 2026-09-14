@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { streamText, RateLimitError } from "@/lib/gemini";
 import { consumeQuota, globalCheck } from "@/lib/quota";
 import { touchStreak } from "@/lib/streak";
+import { suggestRoleFromStacks } from "@/lib/roles";
+import { stackName, stackNames } from "@/lib/stacks";
 import {
   interviewerSystemPrompt,
   transcriptPrompt,
@@ -159,7 +161,9 @@ export async function POST(
     await Promise.all([
       supabase
         .from("profiles")
-        .select("target_role, skills")
+        .select(
+          "target_role, skills, role_id, role_other, stack_ids, primary_stack_id"
+        )
         .eq("id", user.id)
         .maybeSingle(),
       supabase
@@ -181,6 +185,15 @@ export async function POST(
     interviewerName: persona.interviewer_name ?? "Aarav",
     questionCount: persona.question_count ?? 6,
     targetRole: profile?.target_role,
+    // Falls back to a guess from their stacks when they haven't confirmed a
+    // role yet — framing only, never written back to the profile.
+    roleId:
+      profile?.role_id ?? suggestRoleFromStacks(profile?.stack_ids ?? []),
+    roleOther: profile?.role_other,
+    stacks: stackNames(profile?.stack_ids ?? []),
+    primaryStack: profile?.primary_stack_id
+      ? stackName(profile.primary_stack_id)
+      : null,
     jdText: interview.jd_text,
     skills: profile?.skills,
     topicScope,

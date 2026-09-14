@@ -3,8 +3,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Code2, PenTool } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
+import { Button } from "@/components/ui/button";
 import { NewInterviewForm } from "@/components/interview/NewInterviewForm";
 import { CurriculumSchema } from "@/lib/schemas";
+import { stackName, stackNames } from "@/lib/stacks";
 
 export default async function NewInterviewPage({
   searchParams,
@@ -45,19 +47,50 @@ export default async function NewInterviewPage({
         levelTitle = parsed.data.levels[parsedLevel].title;
       }
     }
-  } else {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("target_role")
-      .eq("id", user.id)
-      .maybeSingle();
-    defaultRoleTrack = profile?.target_role ?? "";
   }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("target_role, role_id, stack_ids, primary_stack_id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const stackIds: string[] = profile?.stack_ids ?? [];
+  if (!curriculumId) {
+    // Prefer the technologies they actually chose over the free-text job title.
+    const primary = profile?.primary_stack_id;
+    defaultRoleTrack =
+      (primary ? stackName(primary) : stackNames(stackIds)[0]) ??
+      profile?.target_role ??
+      "";
+  }
+
+  // Empty state: an interview needs something to be about.
+  const needsSetup = stackIds.length === 0 || !profile?.role_id;
 
   return (
     <>
       <AppNav />
       <main className="mx-auto w-full max-w-2xl space-y-4 px-4 sm:px-6 py-10">
+        {needsSetup && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+            <p className="text-sm font-medium">
+              {stackIds.length === 0
+                ? "Choose your tech stack first"
+                : "Set your target role first"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {stackIds.length === 0
+                ? "The interviewer needs to know which technologies to ask about."
+                : "Your role decides the scenarios and the mix of coding, design and behavioural questions."}
+            </p>
+            <Button
+              size="sm"
+              className="mt-3"
+              render={<Link href="/settings">Set this up</Link>}
+            />
+          </div>
+        )}
         <NewInterviewForm
           defaultRoleTrack={defaultRoleTrack}
           curriculumId={curriculumId}
