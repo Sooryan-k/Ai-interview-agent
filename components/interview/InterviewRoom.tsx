@@ -342,10 +342,38 @@ export function InterviewRoom({
           <Badge variant="outline">{difficulty}</Badge>
           {currency && <Badge variant="outline">{currency}</Badge>}
           <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {roundType === "depth" ? "Rung" : "Q"}{" "}
-              {Math.min(aiTurnCount, questionCount)}/{questionCount}
-            </span>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground tabular-nums">
+                    <span className="hidden sm:inline">
+                      {roundType === "depth" ? "Rung" : "Question"}
+                    </span>
+                    <span className="sm:hidden">
+                      {roundType === "depth" ? "Rung" : "Q"}
+                    </span>
+                    {Math.min(aiTurnCount, questionCount)} of {questionCount}
+                    {/* A thin bar reads faster than the numbers at a glance. */}
+                    <span
+                      aria-hidden
+                      className="hidden h-1 w-16 overflow-hidden rounded-full bg-muted sm:block"
+                    >
+                      <span
+                        className="block h-full rounded-full bg-primary transition-[width] duration-300"
+                        style={{
+                          width: `${Math.min(100, (Math.min(aiTurnCount, questionCount) / Math.max(1, questionCount)) * 100)}%`,
+                        }}
+                      />
+                    </span>
+                  </span>
+                }
+              />
+              <TooltipContent>
+                {roundType === "depth"
+                  ? `This ladder climbs up to ${questionCount} rungs and stops when it finds your ceiling.`
+                  : `This interview is ${questionCount} questions long. It runs to the end unless you finish it early.`}
+              </TooltipContent>
+            </Tooltip>
             {tts.supported && (
               <>
                 <Tooltip>

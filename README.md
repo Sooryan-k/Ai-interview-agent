@@ -21,7 +21,8 @@ Sign in, pick your stack, and the agent prepares **everything** for your intervi
    [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), then
    [`supabase/migrations/0002_stories.sql`](supabase/migrations/0002_stories.sql), then
    [`supabase/migrations/0003_username.sql`](supabase/migrations/0003_username.sql), then
-   [`supabase/migrations/0004_role_and_stacks.sql`](supabase/migrations/0004_role_and_stacks.sql).
+   [`supabase/migrations/0004_role_and_stacks.sql`](supabase/migrations/0004_role_and_stacks.sql), then
+   [`supabase/migrations/0005_interview_plan_and_history.sql`](supabase/migrations/0005_interview_plan_and_history.sql).
 3. Auth → Providers: enable **Email** (magic link works out of the box). Optionally enable **Google** (add OAuth credentials).
 4. Auth → URL Configuration: add `http://localhost:3000/**` (and your Vercel URL later) to redirect URLs.
 5. Project Settings → API: copy the URL, `anon` key, and `service_role` key.
@@ -132,7 +133,9 @@ helpers below only appear here.
 | Show me the answer | Teaches the answer in 2–3 sentences, highlighted in place, then moves on to the next question |
 | Difficulty ramp | Easy and medium rounds open at "what is X" and climb one step at a time; hard opens at the senior bar |
 | Voice controls | Mute/unmute, male or female interviewer voice with a preview, remembered per device |
-| Question counter | 10 / 12 / 15 questions by difficulty, with a hard stop so a round always ends |
+| Question count | Set by your stack selection: 1 technology = 12 questions basics-upward, 2+ = 5 each (6 stacks = 30), rotating between them. Shown before you start, stored on the session, and the round runs to the end unless you finish it early |
+| Honest scoring | Every answer is marked on correctness, depth, structure and clarity, with correctness weighted heaviest. A non-answer scores zero, a wrong answer is capped low, and the overall score is the mean of the per-question scores — computed, never generated |
+| No repeat questions | Every question you are asked is recorded per technology. Later interviews exclude them, including rewordings of the same question. Resettable per technology from Settings |
 | End early | The interviewer signs off properly first, then you get the report |
 | Resume mid-round | Close the tab and come back — transcript and progress are saved |
 | Live transcript | Every question and answer on screen as it happens, with answers highlighted |

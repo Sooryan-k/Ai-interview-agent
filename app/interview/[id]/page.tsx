@@ -17,7 +17,9 @@ export default async function InterviewPage({
 
   const { data: interview } = await supabase
     .from("interviews")
-    .select("id, status, role_track, round_type, difficulty, persona")
+    .select(
+      "id, status, role_track, round_type, difficulty, persona, planned_questions"
+    )
     .eq("id", id)
     .maybeSingle();
   if (!interview) redirect("/dashboard");
@@ -53,7 +55,7 @@ export default async function InterviewPage({
         roleTrack={interview.role_track}
         roundType={interview.round_type}
         difficulty={interview.difficulty}
-        questionCount={persona.question_count ?? 6}
+        questionCount={interview.planned_questions ?? persona.question_count ?? 12}
         currency={persona.currency}
         panel={persona.panel === true}
       />

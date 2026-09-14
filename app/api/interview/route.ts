@@ -4,6 +4,12 @@ import { consumeQuota, userInterviewCheck } from "@/lib/quota";
 import { CurriculumSchema } from "@/lib/schemas";
 import { DEFAULT_CURRENCY, isCurrencyCode } from "@/lib/currency";
 import { GitHubError, buildRepoDigest, parseRepoRef } from "@/lib/github";
+import { isStackId, resolveStackList, MAX_STACKS } from "@/lib/stacks";
+import {
+  buildQuestionPlan,
+  plannedQuestionsFor,
+  STACK_DRIVEN_ROUNDS,
+} from "@/lib/interview-plan";
 
 const ROUND_TYPES = new Set([
   "behavioral",
@@ -25,25 +31,6 @@ const INTERVIEWER_NAMES = [
   "Vikram",
   "Meera",
 ];
-
-// Each question is one Gemini call, so these directly set the cost of a round:
-// a hard interview is ~15 turn calls + 1 report call against the daily budget.
-const QUESTIONS_BY_DIFFICULTY: Record<string, number> = {
-  easy: 10,
-  medium: 12,
-  hard: 15,
-};
-
-/**
- * Depth ladders climb further than a normal round has questions — the rung
- * count is an upper bound the candidate usually never reaches, because the
- * ladder stops the moment it finds their ceiling.
- */
-const LADDER_RUNGS_BY_DIFFICULTY: Record<string, number> = {
-  easy: 6,
-  medium: 8,
-  hard: 10,
-};
 
 // Fetching a repo tree + several files can take a few seconds.
 export const maxDuration = 60;
@@ -109,6 +96,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "roleTrack required" }, { status: 400 });
   }
 
+  // Which technologies this round covers. The client sends the ids it picked;
+  // anything unrecognised is dropped rather than trusted, and a client that
+  // sends none at all falls back to reading them out of the label.
+  const requestedStacks = Array.isArray(body?.stackIds)
+    ? (body.stackIds as unknown[])
+        .filter((id): id is string => typeof id === "string" && isStackId(id))
+        .slice(0, MAX_STACKS)
+    : [];
+  const stackIds =
+    requestedStacks.length > 0
+      ? [...new Set(requestedStacks)]
+      : resolveStackList(roleTrack).ids.slice(0, MAX_STACKS);
+
+  // The length of the interview is decided here, once, and stored on the
+  // session. Nothing downstream recomputes it and the model is never asked to
+  // keep count.
+  const plannedQuestions = plannedQuestionsFor({
+    roundType,
+    difficulty,
+    stackIds,
+  });
+  const questionPlan =
+    STACK_DRIVEN_ROUNDS.has(roundType) && stackIds.length > 0
+      ? buildQuestionPlan(stackIds)
+      : null;
+
   // Build the repo digest BEFORE consuming quota — a bad URL or a GitHub
   // hiccup shouldn't cost the user one of their daily interviews.
   let repo: { label: string; digest: string; truncated: boolean } | null = null;
@@ -164,10 +177,8 @@ export async function POST(request: Request) {
   const persona = {
     interviewer_name:
       INTERVIEWER_NAMES[Math.floor(Math.random() * INTERVIEWER_NAMES.length)],
-    question_count:
-      roundType === "depth"
-        ? LADDER_RUNGS_BY_DIFFICULTY[difficulty]
-        : QUESTIONS_BY_DIFFICULTY[difficulty],
+    // Kept in sync with the column for older clients reading persona.
+    question_count: plannedQuestions,
     bar_raiser: barRaiser,
     panel,
     ...(roundType === "negotiation" ? { currency } : {}),
@@ -192,6 +203,9 @@ export async function POST(request: Request) {
       difficulty,
       persona,
       jd_text: jdText,
+      planned_questions: plannedQuestions,
+      stack_ids: stackIds,
+      question_plan: questionPlan,
     })
     .select("id")
     .single();

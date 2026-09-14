@@ -24,10 +24,12 @@ import {
   BadgeDollarSign,
   Flame,
   FolderGit2,
+  ListChecks,
   Mic,
   TrendingDown,
   Users,
 } from "lucide-react";
+import { describePlan, plannedQuestionsFor } from "@/lib/interview-plan";
 import { cn } from "@/lib/utils";
 import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currency";
 import { VoicePicker } from "@/components/interview/VoicePicker";
@@ -78,6 +80,7 @@ export function NewInterviewForm({
 }) {
   const router = useRouter();
   const [roleTrack, setRoleTrack] = useState("");
+  const [stackIds, setStackIds] = useState<string[]>(defaultStackIds);
   const [roundType, setRoundType] = useState(() =>
     ROUNDS.some((r) => r.value === defaultRoundType)
       ? (defaultRoundType as string)
@@ -91,6 +94,12 @@ export function NewInterviewForm({
   const [barRaiser, setBarRaiser] = useState(false);
   const [panel, setPanel] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Mirrors the server's rule exactly (same module), so the number shown here
+  // is the number the interview is created with.
+  const planArgs = { roundType, difficulty, stackIds };
+  const plannedQuestions = plannedQuestionsFor(planArgs);
+  const plan = describePlan(planArgs);
 
   async function start() {
     if (!roleTrack.trim()) {
@@ -108,6 +117,7 @@ export function NewInterviewForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           roleTrack: roleTrack.trim(),
+          stackIds,
           roundType,
           difficulty,
           curriculumId,
@@ -157,6 +167,7 @@ export function NewInterviewForm({
             primaryStackId={primaryStackId}
             roleId={roleId}
             onChange={setRoleTrack}
+            onStacksChange={setStackIds}
           />
         </div>
 
@@ -354,12 +365,25 @@ export function NewInterviewForm({
           </span>
         </label>
 
+        {/* How long this will be — decided by the stack selection, shown before
+            they commit to it rather than discovered on question 23. */}
+        <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+          <ListChecks className="mt-0.5 size-4 shrink-0 text-primary" />
+          <p className="text-sm">
+            <span className="font-medium">
+              {plan.count} {plan.unit}
+              {plan.count === 1 ? "" : "s"}
+            </span>{" "}
+            <span className="text-muted-foreground">— {plan.detail}.</span>
+          </p>
+        </div>
+
         <Button onClick={start} disabled={loading} size="lg" className="w-full">
           {loading
             ? roundType === "repo"
               ? "Reading your repository…"
               : "Setting up your interviewer…"
-            : "Start interview"}
+            : `Start ${plannedQuestions}-question interview`}
         </Button>
         <p className="text-center text-xs text-muted-foreground">
           Works best in Chrome/Edge for voice. You can always type instead.

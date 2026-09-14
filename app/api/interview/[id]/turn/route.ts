@@ -11,10 +11,19 @@ import {
 } from "@/lib/prompts/interviewer";
 import {
   CurriculumSchema,
-  EvalSchema,
   EVAL_SENTINEL,
   END_MARKER,
+  parseTurnMeta,
 } from "@/lib/schemas";
+import { detectNonAnswer, resolveEval } from "@/lib/scoring";
+import { stackForQuestion, type QuestionPlan } from "@/lib/interview-plan";
+import {
+  buildExclusions,
+  exclusionPromptSection,
+  findDuplicate,
+  questionSignature,
+  type HistoryEntry,
+} from "@/lib/question-history";
 
 export const maxDuration = 60;
 
@@ -52,7 +61,7 @@ export async function POST(
   const { data: interview } = await supabase
     .from("interviews")
     .select(
-      "id, status, role_track, round_type, difficulty, persona, jd_text, curriculum_id, curriculum_level"
+      "id, status, role_track, round_type, difficulty, persona, jd_text, curriculum_id, curriculum_level, planned_questions, stack_ids, question_plan"
     )
     .eq("id", interviewId)
     .maybeSingle();
@@ -98,6 +107,12 @@ export async function POST(
       { status: 429 }
     );
   }
+
+  // Whether the candidate actually answered is decided here, from their words,
+  // before the model ever sees them. Everything downstream — the score, the
+  // follow-up, the report tally — hangs off this rather than off the model's
+  // willingness to call a non-answer a non-answer.
+  const nonAnswer = answer ? detectNonAnswer(answer) : { isNonAnswer: false };
 
   // Persist the candidate's answer before generating.
   let userTurnIdx: number | null = null;
@@ -178,12 +193,42 @@ export async function POST(
     .filter((s) => s.polished_md)
     .map((s) => ({ title: s.title as string, polished: s.polished_md as string }));
 
+  // ---- The plan, and where in it we are ----
+  const plannedQuestions =
+    interview.planned_questions ?? persona.question_count ?? 12;
+  const plan = (interview.question_plan as QuestionPlan | null) ?? null;
+  const interviewStacks: string[] = interview.stack_ids ?? [];
+  // aiTurnCount interviewer messages have gone out, so the next one is
+  // question number aiTurnCount + 1.
+  const questionNumber = aiTurnCount + 1;
+  const nextStackId = stackForQuestion(plan, aiTurnCount);
+
+  // ---- What they've already been asked, across every previous interview ----
+  let exclusions = "";
+  let stackHistory: HistoryEntry[] = [];
+  if (interviewStacks.length > 0) {
+    const { data: past } = await supabase
+      .from("question_history")
+      .select("question, signature, topic, stack_id, difficulty, asked_at")
+      .eq("user_id", user.id)
+      .in("stack_id", interviewStacks)
+      .order("asked_at", { ascending: false })
+      .limit(400);
+    stackHistory = past ?? [];
+    exclusions = exclusionPromptSection(
+      buildExclusions(stackHistory, interviewStacks, (id) => stackName(id) ?? id)
+    );
+  }
+
   const system = interviewerSystemPrompt({
     roleTrack: interview.role_track,
     roundType: interview.round_type,
     difficulty: interview.difficulty,
     interviewerName: persona.interviewer_name ?? "Aarav",
-    questionCount: persona.question_count ?? 6,
+    questionCount: plannedQuestions,
+    plan,
+    questionNumber,
+    exclusions,
     targetRole: profile?.target_role,
     // Falls back to a guess from their stacks when they haven't confirmed a
     // role yet — framing only, never written back to the profile.
@@ -212,7 +257,6 @@ export async function POST(
   // reveals are in the mix, so once the planned number of interviewer turns is
   // used up, this turn becomes the sign-off no matter what was requested —
   // otherwise repeatedly clicking "show me the answer" runs on forever.
-  const plannedQuestions = persona.question_count ?? 6;
   const mustClose = aiTurnCount >= plannedQuestions;
   const closing = wrapUp || mustClose;
 
@@ -221,6 +265,10 @@ export async function POST(
     reveal: reveal && !closing,
     wrapUp: closing,
     wrapUpReason: wrapUp ? "early" : "complete",
+    nonAnswer: nonAnswer.isNonAnswer && !closing,
+    questionNumber: closing ? undefined : questionNumber,
+    questionCount: closing ? undefined : plannedQuestions,
+    nextStack: nextStackId ? stackName(nextStackId) : null,
   });
 
   // Stream: forward visible text only; hold back the sentinel + eval JSON.
@@ -293,29 +341,32 @@ export async function POST(
             ? full.slice(sentinelAt + EVAL_SENTINEL.length).trim()
             : "";
 
-        // A reveal is a learning request, not a failure — but a depth ladder's
-        // "stop at the ceiling" rule reads "show me the answer" as giving up,
-        // so the model sometimes wraps the whole interview up mid-round.
-        // Ignore an end marker on a reveal unless we really are at the last
-        // planned question, and keep the round open.
-        // `closing` covers both an explicit "end early" and running out of
-        // planned questions; either way the round is over whether or not the
-        // model remembered the marker. A reveal on its own never ends it.
-        const ended =
-          closing || (visibleRaw.includes(END_MARKER) && !reveal);
-        const visible = visibleRaw.replace(END_MARKER, "").trim();
-
-        let evalJson: unknown = null;
-        if (evalRaw && evalRaw !== "null") {
-          try {
-            const cleaned = evalRaw
-              .replace(/^```(?:json)?\s*/i, "")
-              .replace(/\s*```$/, "");
-            evalJson = EvalSchema.parse(JSON.parse(cleaned));
-          } catch {
-            evalJson = null; // malformed eval is non-fatal
-          }
+        // WHO ENDS THE INTERVIEW.
+        //
+        // Only two things end a round: the candidate choosing to stop, or the
+        // planned questions running out. Both are `closing`, decided above from
+        // stored state before the model was even called.
+        //
+        // An END_MARKER in the model's output is deliberately ignored for every
+        // round except a depth ladder — the model drifts into "that's all we
+        // have time for" after a few weak answers, which is exactly how a
+        // 12-question interview used to stop at 4. The marker is stripped from
+        // the text either way so the candidate never sees a goodbye that isn't.
+        //
+        // Depth ladders are the one exception: stopping the moment it finds the
+        // ceiling is that round's entire purpose, not a malfunction.
+        const modelWantsEnd = visibleRaw.includes(END_MARKER);
+        const ladderCeiling =
+          interview.round_type === "depth" && modelWantsEnd && !reveal;
+        const ended = closing || ladderCeiling;
+        if (modelWantsEnd && !ended) {
+          console.warn(
+            `[turn] ignored an unplanned end marker at question ${questionNumber}/${plannedQuestions} on interview ${interviewId}`
+          );
         }
+        const visible = visibleRaw.split(END_MARKER).join("").trim();
+
+        const meta = parseTurnMeta(evalRaw);
 
         await supabase.from("turns").insert({
           interview_id: interviewId,
@@ -324,12 +375,64 @@ export async function POST(
           text: visible,
         });
 
-        if (evalJson && userTurnIdx !== null) {
+        // ---- Score of record ----
+        // resolveEval reads the candidate's actual words; a non-answer is a
+        // zero here regardless of what the model proposed.
+        if (userTurnIdx !== null && answer) {
+          const resolved = resolveEval(answer, meta.eval);
           await supabase
             .from("turns")
-            .update({ eval: evalJson })
+            .update({
+              eval: {
+                score: resolved.score,
+                verdict: resolved.verdict,
+                criteria: resolved.criteria,
+                note: resolved.note,
+                model_answer: resolved.model_answer,
+                tags: resolved.tags,
+                ...(resolved.depth !== undefined
+                  ? { depth: resolved.depth }
+                  : {}),
+              },
+            })
             .eq("interview_id", interviewId)
             .eq("idx", userTurnIdx);
+        }
+
+        // ---- Remember what was asked, so the next interview can avoid it ----
+        if (!ended && meta.question?.text?.trim()) {
+          const questionText = meta.question.text.trim();
+          // The model is told which technology to cover; trust the plan over
+          // its self-report when the two disagree.
+          const stackId =
+            nextStackId ??
+            (meta.question.stack && interviewStacks.includes(meta.question.stack)
+              ? meta.question.stack
+              : interviewStacks[0] ?? null);
+
+          if (stackId) {
+            const repeat = findDuplicate(
+              questionText,
+              stackHistory.filter((h) => h.stack_id === stackId),
+              { context: [stackName(stackId) ?? stackId, stackId] }
+            );
+            if (repeat) {
+              // Recorded anyway — it was genuinely asked, and leaving it out
+              // would let the same question come back a third time.
+              console.warn(
+                `[turn] repeat question on ${stackId}: "${questionText}" ~ "${repeat.question}"`
+              );
+            }
+            await supabase.from("question_history").insert({
+              user_id: user.id,
+              interview_id: interviewId,
+              stack_id: stackId,
+              topic: meta.question.topic?.slice(0, 120) ?? "",
+              difficulty: meta.question.difficulty || interview.difficulty,
+              question: questionText.slice(0, 1000),
+              signature: questionSignature(questionText),
+            });
+          }
         }
 
         if (ended) {

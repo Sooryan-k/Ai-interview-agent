@@ -126,11 +126,15 @@ function main() {
   });
   check(
     "normal round keeps the standard plan",
-    normalPrompt.includes("Ask exactly 6 main questions")
+    normalPrompt.includes("This round is 6 main questions long")
   );
   check(
-    "normal round omits the depth field from the eval shape",
-    !normalPrompt.includes('"depth"')
+    "normal round omits the ladder-rung field from the eval shape",
+    !normalPrompt.includes("ladder level")
+  );
+  check(
+    "normal round forbids the model ending the interview itself",
+    /NEVER end the interview yourself/.test(normalPrompt)
   );
 
   // ---- difficulty ramp ----
@@ -187,7 +191,7 @@ function main() {
   );
   check(
     "reveal: emits a null eval since nothing was answered",
-    /output null for the eval JSON/.test(revealTurn)
+    /set "eval" to null/.test(revealTurn)
   );
   check(
     "reveal: stays speakable (no markdown in the spoken answer)",

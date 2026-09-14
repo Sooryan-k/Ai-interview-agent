@@ -11,9 +11,9 @@ import {
   CurriculumSchema,
   StudyMaterialSchema,
   ReportSchema,
-  EvalSchema,
   EVAL_SENTINEL,
   END_MARKER,
+  parseTurnMeta,
 } from "@/lib/schemas";
 
 let failures = 0;
@@ -73,18 +73,25 @@ async function main() {
     );
 
     const evalRaw = full.slice(full.indexOf(EVAL_SENTINEL) + EVAL_SENTINEL.length).trim();
+    const meta = parseTurnMeta(evalRaw);
     if (turnIdx === 0) {
-      check("turn 0: eval is null (no prior answer)", evalRaw === "null", evalRaw);
+      check("turn 0: eval is null (no prior answer)", meta.eval === null, evalRaw);
     } else {
-      const parsed = EvalSchema.safeParse(JSON.parse(evalRaw));
-      check(`turn ${turnIdx}: eval JSON parses`, parsed.success, evalRaw);
+      check(`turn ${turnIdx}: eval parses`, meta.eval !== null, evalRaw);
     }
-    if (turnIdx === 3) {
-      check("final turn carries END marker", clientSees.includes(END_MARKER));
-    } else {
-      check(`turn ${turnIdx}: no premature END marker`, !clientSees.includes(END_MARKER));
-    }
+    check(
+      `turn ${turnIdx}: question metadata captured for history`,
+      Boolean(meta.question?.text),
+      evalRaw
+    );
+    // Ending is the server's call; a fixture must never smuggle one in.
+    check(`turn ${turnIdx}: no END marker from the model`, !clientSees.includes(END_MARKER));
   }
+
+  // Legacy transcripts recorded under the old bare-eval shape still parse.
+  const legacy = parseTurnMeta('{"score": 7, "note": "old shape", "tags": ["x"]}');
+  check("legacy bare eval still parses", legacy.eval?.score === 7);
+  check("malformed hidden block degrades to empty, not a throw", parseTurnMeta("{oops").eval === null);
 
   console.log(failures === 0 ? "\nALL CHECKS PASSED" : `\n${failures} CHECKS FAILED`);
   process.exit(failures === 0 ? 0 : 1);

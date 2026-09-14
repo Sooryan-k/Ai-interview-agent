@@ -26,6 +26,58 @@ interface PerQuestion {
   answer_summary: string;
   model_answer: string;
   score: number;
+  verdict?: string;
+}
+
+interface Tally {
+  asked?: number;
+  answered?: number;
+  unanswered?: number;
+  correct?: number;
+  partially_correct?: number;
+  incorrect?: number;
+}
+
+const VERDICT_LABEL: Record<string, string> = {
+  correct: "Correct",
+  partially_correct: "Partly correct",
+  incorrect: "Incorrect",
+  unanswered: "Not answered",
+};
+
+const VERDICT_CLASS: Record<string, string> = {
+  correct:
+    "border-emerald-600/30 text-emerald-700 dark:border-emerald-400/30 dark:text-emerald-400",
+  partially_correct:
+    "border-amber-600/30 text-amber-700 dark:border-amber-400/30 dark:text-amber-400",
+  incorrect:
+    "border-red-600/30 text-red-700 dark:border-red-400/30 dark:text-red-400",
+  unanswered: "border-muted-foreground/30 text-muted-foreground",
+};
+
+function Stat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone?: "good" | "bad";
+}) {
+  return (
+    <div>
+      <div
+        className={cn(
+          "text-2xl font-semibold tabular-nums",
+          tone === "good" && "text-emerald-600 dark:text-emerald-400",
+          tone === "bad" && "text-red-600 dark:text-red-400"
+        )}
+      >
+        {value}
+      </div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+    </div>
+  );
 }
 
 function scoreColor(score: number, outOf: number) {
@@ -50,7 +102,7 @@ export default async function ReportPage({
   const { data: report } = await supabase
     .from("reports")
     .select(
-      "overall_score, strengths, weaknesses, per_question, recommendations, share_slug, created_at"
+      "overall_score, strengths, weaknesses, per_question, recommendations, share_slug, created_at, tally"
     )
     .eq("interview_id", id)
     .maybeSingle();
@@ -100,6 +152,7 @@ export default async function ReportPage({
   const weaknesses = (report.weaknesses ?? []) as string[];
   const perQuestion = (report.per_question ?? []) as PerQuestion[];
   const recommendations = (report.recommendations ?? []) as string[];
+  const tally = (report.tally ?? {}) as Tally;
 
   return (
     <>
@@ -136,6 +189,33 @@ export default async function ReportPage({
           interviewId={id}
           initialSlug={(report.share_slug as string | null) ?? null}
         />
+
+        {/* The count of record. The headline score is the mean of the
+            per-question scores, so this is what it's made of. */}
+        {tally.asked ? (
+          <Card>
+            <CardContent className="grid grid-cols-2 gap-4 py-4 sm:grid-cols-4">
+              <Stat label="Asked" value={tally.asked} />
+              <Stat
+                label="Answered"
+                value={tally.answered ?? 0}
+                tone={
+                  (tally.answered ?? 0) === 0 ? "bad" : undefined
+                }
+              />
+              <Stat
+                label="Correct"
+                value={tally.correct ?? 0}
+                tone={(tally.correct ?? 0) > 0 ? "good" : undefined}
+              />
+              <Stat
+                label="Not answered"
+                value={tally.unanswered ?? 0}
+                tone={(tally.unanswered ?? 0) > 0 ? "bad" : undefined}
+              />
+            </CardContent>
+          </Card>
+        ) : null}
 
         {/* Strengths & weaknesses */}
         <div className="grid gap-4 sm:grid-cols-2">
@@ -255,6 +335,14 @@ export default async function ReportPage({
                     {pq.score}/10
                   </span>
                 </div>
+                {pq.verdict && (
+                  <Badge
+                    variant="outline"
+                    className={cn("mt-2", VERDICT_CLASS[pq.verdict])}
+                  >
+                    {VERDICT_LABEL[pq.verdict] ?? pq.verdict}
+                  </Badge>
+                )}
                 <p className="mt-2 text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">You: </span>
                   {pq.answer_summary}

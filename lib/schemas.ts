@@ -41,14 +41,134 @@ export const StudyMaterialSchema = z.object({
 export type StudyMaterial = z.infer<typeof StudyMaterialSchema>;
 
 // ---------- Per-answer eval (hidden block in each turn) ----------
+/**
+ * The eval of record, as stored on the candidate's turn. `score` and `verdict`
+ * are computed by lib/scoring.ts from `criteria` — the model proposes the
+ * criteria, the server decides the number.
+ *
+ * Everything beyond the original four fields is optional so rows written before
+ * per-criterion scoring existed still parse.
+ */
 export const EvalSchema = z.object({
   score: z.number().min(0).max(10),
   note: z.string(),
   tags: z.array(z.string()).catch([]),
   /** Depth-ladder rounds only: which rung this answer was on. */
   depth: z.number().int().min(1).max(20).optional().catch(undefined),
+  verdict: z
+    .enum(["unanswered", "incorrect", "partially_correct", "correct"])
+    .optional()
+    .catch(undefined),
+  criteria: z
+    .object({
+      correctness: z.number().min(0).max(10),
+      depth: z.number().min(0).max(10),
+      structure: z.number().min(0).max(10),
+      clarity: z.number().min(0).max(10),
+    })
+    .optional()
+    .catch(undefined),
+  /** What a correct answer was — present whenever they didn't give one. */
+  model_answer: z.string().optional().catch(undefined),
 });
 export type TurnEval = z.infer<typeof EvalSchema>;
+
+/**
+ * What the model proposes about the previous answer. Every field is optional
+ * and nothing is trusted as final: lib/scoring.ts resolves this against the
+ * candidate's actual words.
+ */
+export const ModelEvalSchema = z.object({
+  verdict: z.string().optional().catch(undefined),
+  criteria: z
+    .object({
+      correctness: z.number().optional().catch(undefined),
+      depth: z.number().optional().catch(undefined),
+      structure: z.number().optional().catch(undefined),
+      clarity: z.number().optional().catch(undefined),
+    })
+    .partial()
+    .optional()
+    .catch(undefined),
+  note: z.string().optional().catch(undefined),
+  model_answer: z.string().optional().catch(undefined),
+  tags: z.array(z.string()).optional().catch([]),
+  depth: z.number().optional().catch(undefined),
+  /** Legacy shape: a bare score with no criteria behind it. */
+  score: z.number().optional().catch(undefined),
+});
+export type ModelEvalInput = z.infer<typeof ModelEvalSchema>;
+
+/**
+ * What the question just asked was about. Recorded per turn so the next
+ * interview on the same stack can exclude it.
+ */
+export const QuestionMetaSchema = z.object({
+  /** Catalog id from lib/stacks.ts, or "" when the round isn't stack-driven. */
+  stack: z.string().catch(""),
+  topic: z.string().catch(""),
+  difficulty: z.string().catch("medium"),
+  /** The question on its own, without the acknowledgement that preceded it. */
+  text: z.string().catch(""),
+});
+export type QuestionMeta = z.infer<typeof QuestionMetaSchema>;
+
+export interface TurnMeta {
+  eval: ModelEvalInput | null;
+  question: QuestionMeta | null;
+}
+
+/**
+ * Parses the hidden block that follows EVAL_SENTINEL.
+ *
+ * Accepts three shapes, because the protocol changed and old transcripts must
+ * keep working:
+ *  - `{"eval": {...}|null, "question": {...}|null}` — current.
+ *  - `{"score": 7, "note": "…"}` — the original bare eval.
+ *  - `null` — the opening turn, where there is no previous answer.
+ *
+ * Never throws: a malformed block costs the metadata for one turn, which is
+ * recoverable, whereas throwing would lose the turn itself.
+ */
+export function parseTurnMeta(raw: string): TurnMeta {
+  const empty: TurnMeta = { eval: null, question: null };
+  const cleaned = raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+  if (!cleaned || cleaned === "null") return empty;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    return empty;
+  }
+  if (!parsed || typeof parsed !== "object") return empty;
+
+  const obj = parsed as Record<string, unknown>;
+
+  // Legacy: the object IS the eval.
+  if (!("eval" in obj) && !("question" in obj)) {
+    const legacy = ModelEvalSchema.safeParse(obj);
+    return { eval: legacy.success ? legacy.data : null, question: null };
+  }
+
+  const evalResult =
+    obj.eval && typeof obj.eval === "object"
+      ? ModelEvalSchema.safeParse(obj.eval)
+      : null;
+  const questionResult =
+    obj.question && typeof obj.question === "object"
+      ? QuestionMetaSchema.safeParse(obj.question)
+      : null;
+
+  return {
+    eval: evalResult?.success ? evalResult.data : null,
+    question: questionResult?.success ? questionResult.data : null,
+  };
+}
 
 // ---------- End-of-interview report ----------
 export const ReportSchema = z.object({

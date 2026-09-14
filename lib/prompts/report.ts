@@ -8,6 +8,7 @@ interface ReportTurn {
     note: string;
     tags: string[];
     depth?: number;
+    verdict?: string;
   } | null;
 }
 
@@ -34,7 +35,8 @@ export function reportPrompt(args: {
       if (!t.eval) return line;
       const rung =
         typeof t.eval.depth === "number" ? ` — rung ${t.eval.depth}` : "";
-      return `${line}\n[private per-answer eval: score ${t.eval.score}/10${rung} — ${t.eval.note}]`;
+      const verdict = t.eval.verdict ? `${t.eval.verdict.replace(/_/g, " ")}, ` : "";
+      return `${line}\n[graded: ${verdict}${t.eval.score}/10${rung} — ${t.eval.note}]`;
     })
     .join("\n\n");
 
@@ -44,25 +46,33 @@ export function reportPrompt(args: {
 
 Interview: ${args.roleTrack} — ${args.roundType} round — ${args.difficulty} difficulty.
 ${framing ? `\n${framing}\n` : ""}
-Full transcript (with private per-answer evaluations where available):
+Full transcript. Each answer carries the grade it was already given — those grades are final and are what the candidate will see, so write a report that agrees with them:
 
 ${transcript}
 
+Honesty rules, which override any instinct to be encouraging:
+- An answer graded "unanswered" was NOT answered. Never list it as a strength, never describe it as a partial understanding, and never praise the candidate for engaging with it.
+- An answer graded "incorrect" was wrong. Say what was wrong and what the right answer is, plainly.
+- If the candidate answered little or nothing, say so directly. A report full of invented positives is worse than useless to them — they will walk into a real interview believing they are ready.
+- Strengths must cite something they actually said. If there is nothing to cite, return fewer strengths, or an empty list.
+
 Write the report as STRICT JSON only, matching exactly:
 {
-  "overall_score": number,          // 0-100, calibrated: 50 = borderline, 70 = solid pass, 85+ = strong hire signal
-  "strengths": string[],            // 2-4 specific strengths, each citing evidence from the transcript
+  "overall_score": number,          // ignored — the system computes this from the per-answer grades
+  "strengths": string[],            // 0-4 specific strengths, each citing evidence from the transcript
   "weaknesses": string[],           // 2-4 specific gaps, each actionable
-  "per_question": [                 // one entry per main interviewer question
+  "per_question": [                 // one entry per graded answer, IN ORDER, same count
     {
       "q": string,                  // the question, shortened
       "answer_summary": string,     // 1-2 sentences on what the candidate said
       "model_answer": string,       // 2-4 sentences: what a great answer includes
-      "score": number               // 0-10
+      "score": number               // ignored — the grade already assigned is used
     }
   ],
   "recommendations": string[]       // 2-4 concrete next steps ("Re-study X", "Practice Y aloud"), most impactful first
 }
+
+"per_question" must have exactly one entry per graded answer above, in the same order, so the entries line up with their grades.
 
 Rules: be specific, never generic. Quote or paraphrase the candidate where useful. No commentary outside the JSON object.`;
 }

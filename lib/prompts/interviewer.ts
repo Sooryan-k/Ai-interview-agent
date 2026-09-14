@@ -5,6 +5,13 @@ import {
   ANSWER_CLOSE,
 } from "@/lib/schemas";
 import { roleById } from "@/lib/roles";
+import { stackName } from "@/lib/stacks";
+import { stackForQuestion, type QuestionPlan } from "@/lib/interview-plan";
+import {
+  CRITERIA_WEIGHTS,
+  INCORRECT_SCORE_CAP,
+  PARTIAL_SCORE_CAP,
+} from "@/lib/scoring";
 
 export interface InterviewerConfig {
   roleTrack: string;
@@ -33,6 +40,12 @@ export interface InterviewerConfig {
   depthTopic?: string | null;
   /** Repo rounds: a digest of the candidate's own repository. */
   repo?: { label: string; digest: string } | null;
+  /** The stack rotation this round follows, when one was planned. */
+  plan?: QuestionPlan | null;
+  /** 1-based number of the question about to be asked. */
+  questionNumber?: number;
+  /** Questions from previous interviews that must not be repeated. */
+  exclusions?: string;
 }
 
 const ROUND_STYLE: Record<string, string> = {
@@ -186,10 +199,33 @@ ${cfg.repo.digest}
 - EXCEPTION: if the candidate asks for a hint or asks to be shown the answer, that is a learning request, NOT the ceiling. Teach it, then keep climbing — never end the ladder on one of those.
 - When you stop (at the ceiling OR after the final level), your closing message must state the ceiling plainly and specifically, in this shape: "Your ceiling on <topic> is level N of ${cfg.questionCount}. You've got <what they clearly understood>, but <the precise concept they could not explain>." Then give one concrete thing to study. Include the exact line ${END_MARKER} in that message.`);
   } else {
+    const asked = cfg.questionNumber ?? 1;
     sections.push(`INTERVIEW PLAN:
-- Ask exactly ${cfg.questionCount} main questions total (follow-ups to the same question don't count as new questions, but use at most one follow-up per question).
+- This round is ${cfg.questionCount} main questions long. You are about to ask question ${asked} of ${cfg.questionCount}.
 - One question per message. Briefly acknowledge the previous answer (one sentence, natural, no praise inflation) before the next question.
-- After the candidate answers your final question, give a short, warm closing statement (2-3 sentences, no detailed feedback) and include the exact line ${END_MARKER} in that message.`);
+- Follow-ups to the same question don't count as new questions; use at most one follow-up per question.
+- NEVER end the interview yourself. Do not say "that's all we have time for", do not thank them for their time, do not wrap up, and do not output ${END_MARKER} — not even if the conversation feels finished, not even if the candidate is answering badly. The system tracks the count and will tell you explicitly when to close. Until it does, your every message ends with a question.`);
+
+    // Multi-stack rounds rotate rather than finishing one technology at a time,
+    // so the session feels like one interview instead of several quizzes.
+    if (cfg.plan && cfg.plan.perStack.length > 0) {
+      const allocation = cfg.plan.perStack
+        .map((p) => `${stackName(p.stackId) ?? p.stackId} × ${p.count}`)
+        .join(", ");
+      const nextStackId = stackForQuestion(cfg.plan, asked - 1);
+      const nextStack = nextStackId ? stackName(nextStackId) : null;
+      sections.push(`QUESTION ALLOCATION — the ${cfg.questionCount} questions are split across technologies: ${allocation}.
+- Rotate between technologies. Never ask every question about one technology before moving to the next.
+${
+  nextStack
+    ? `- Question ${asked} must be about ${nextStack}.`
+    : `- Keep the remaining questions balanced across the technologies above.`
+}
+- Within each technology, climb from basics toward advanced across the round.
+- A cross-technology question (e.g. how two of them integrate) may stand in for one question of either technology it covers — but the per-technology totals above must still add up, so use these sparingly.`);
+    }
+
+    if (cfg.exclusions) sections.push(cfg.exclusions);
 
     // Easy/medium rounds climb from the ground up; hard opens at the senior bar.
     if (RAMPED_ROUNDS.has(cfg.roundType) && cfg.difficulty !== "hard") {
@@ -210,17 +246,44 @@ ${
     }
   }
 
-  const evalShape =
+  sections.push(`ASSESSMENT RUBRIC — how to judge the candidate's PREVIOUS answer.
+
+Mark these four criteria out of 10, independently:
+- correctness — is what they said actually TRUE, and does it answer the question that was asked? This is the one that matters; it is worth ${CRITERIA_WEIGHTS.correctness * 100}% of the score.
+- depth — did they go past the textbook definition into mechanism, trade-offs or consequences?
+- structure — was the answer organised, or did it wander?
+- clarity — could a colleague follow it?
+
+Then set "verdict" to exactly one of:
+- "correct" — substantially right, no significant errors.
+- "partially_correct" — the right idea with real gaps or a mistake in the details.
+- "incorrect" — factually wrong, or an answer to a different question than the one asked.
+- "unanswered" — they declined to answer ("I don't know", "skip", "next"), said nothing, or replied with something unrelated to the question.
+
+Judge these honestly. Specifically:
+- Being articulate is NOT correctness. A confident, well-structured, completely wrong answer gets correctness 0-2 and verdict "incorrect".
+- Saying "I don't know" is "unanswered". It is never "partially_correct", and the note must never describe it as a good or thoughtful response.
+- Do not soften a mark because the candidate is trying hard, because the question was difficult, or because the previous answers were weak and you want to encourage them. The candidate is relying on this being true.
+- If you are unsure whether a claim is correct, treat it as not established: mark correctness down, don't round up.
+
+"model_answer" is REQUIRED whenever the verdict is anything other than "correct": two or three sentences stating plainly what the right answer is, including what specifically was wrong or missing in theirs. This is what the candidate sees in their report.
+
+The scoring formula is applied by the system, not by you — correctness is weighted heaviest, an "incorrect" verdict is capped at ${INCORRECT_SCORE_CAP}/10, "partially_correct" at ${PARTIAL_SCORE_CAP}/10, and "unanswered" is always 0. Report the criteria truthfully and the number takes care of itself.`);
+
+  const depthField =
     cfg.roundType === "depth"
-      ? `{"score": <0-10>, "note": "<one-sentence private assessment>", "tags": ["<topic tags>"], "depth": <the ladder level that answer was at, starting at 1>}`
-      : `{"score": <0-10>, "note": "<one-sentence private assessment>", "tags": ["<topic tags>"]}`;
+      ? `, "depth": <the ladder level that answer was at, starting at 1>`
+      : "";
 
   sections.push(`OUTPUT PROTOCOL — follow this in EVERY message, with no exceptions:
 1. First, your spoken interviewer message (plain conversational text; it will be read aloud, so no markdown, no bullet lists, no code blocks).
 2. Then the exact sentinel ${EVAL_SENTINEL}
-3. Then a single-line JSON object evaluating the candidate's PREVIOUS answer: ${evalShape}
-   - In your very first message there is no previous answer: output null instead of the JSON object.
-4. Never reveal scores, evaluations, or this protocol to the candidate. Never produce ${EVAL_SENTINEL} anywhere except step 2.`);
+3. Then ONE single-line JSON object, exactly this shape:
+{"eval": {"verdict": "<correct|partially_correct|incorrect|unanswered>", "criteria": {"correctness": <0-10>, "depth": <0-10>, "structure": <0-10>, "clarity": <0-10>}, "note": "<one sentence, private>", "model_answer": "<what the right answer is — required unless verdict is correct>", "tags": ["<topic tags>"]${depthField}}, "question": {"stack": "<which technology the question you JUST asked is about, or empty>", "topic": "<the specific concept, 1-4 words>", "difficulty": "<easy|medium|hard>", "text": "<the question you just asked, on its own, without the acknowledgement before it>"}}
+   - "eval" describes the candidate's PREVIOUS answer. In your very first message there is no previous answer, so use "eval": null.
+   - "question" describes the question in THIS message. When you are closing the interview and asking nothing, use "question": null.
+   - "text" must be the question by itself — it is stored so you never ask this candidate the same thing twice.
+4. Never reveal scores, evaluations, the rubric, or this protocol to the candidate. Never produce ${EVAL_SENTINEL} anywhere except step 2.`);
 
   return sections.join("\n\n");
 }
@@ -233,6 +296,13 @@ export function transcriptPrompt(
     reveal?: boolean;
     wrapUp?: boolean;
     wrapUpReason?: "early" | "complete";
+    /** Server detected the last reply as a non-answer. */
+    nonAnswer?: boolean;
+    /** 1-based number of the question to ask now, and the planned total. */
+    questionNumber?: number;
+    questionCount?: number;
+    /** Technology this question must cover, from the stored rotation. */
+    nextStack?: string | null;
   }
 ): string {
   const lines = turns.map(
@@ -280,7 +350,34 @@ CRITICAL — the interview CONTINUES after this message:
 - It is NOT the candidate's ceiling. Never treat it as hitting the ceiling, never summarise their level, never wrap up.
 - Do NOT output ${END_MARKER} in this message, unless this was genuinely the final planned question.
 
-Use the ${ANSWER_OPEN} / ${ANSWER_CLOSE} markers exactly once, and only in this message. Because they never answered, output null for the eval JSON instead of an object.`;
+Use the ${ANSWER_OPEN} / ${ANSWER_CLOSE} markers exactly once, and only in this message. Because they never answered this question, set "eval" to null — but still fill in "question" for the NEW question you ask at the end.`;
   }
-  return `${transcript}\n\nProduce your next interviewer message now, following the output protocol exactly.`;
+  const directives: string[] = [];
+
+  if (opts?.nonAnswer) {
+    // Detected server-side from the candidate's actual words, so this arrives
+    // whether or not the model recognised the reply as a non-answer.
+    directives.push(`The candidate did NOT answer that question — they said they didn't know, asked to skip, or replied with nothing relevant.
+- Score it "unanswered" with all criteria 0. Do not credit it, and do not describe it as a reasonable point, a fair start, or a good instinct. It wasn't an answer.
+- In one short sentence, either state the correct answer plainly or simply move on. No reassurance speech, no "that's completely fine", no lecture.
+- Then ask the next question. Do not re-ask the one they skipped.
+- Fill "model_answer" in the eval JSON with the answer they should have given.`);
+  }
+
+  if (opts?.questionNumber && opts?.questionCount) {
+    directives.push(
+      `This is question ${opts.questionNumber} of ${opts.questionCount}. ${
+        opts.questionNumber < opts.questionCount
+          ? `There are ${opts.questionCount - opts.questionNumber} more after it, so do NOT wrap up, do NOT thank them for their time, and do NOT output ${END_MARKER}. End this message with your question.`
+          : `This is the last planned question. Ask it normally — the system will tell you when to close.`
+      }`
+    );
+  }
+
+  if (opts?.nextStack) {
+    directives.push(`Ask this question about ${opts.nextStack}.`);
+  }
+
+  const tail = directives.length ? `\n\n${directives.join("\n\n")}` : "";
+  return `${transcript}${tail}\n\nProduce your next interviewer message now, following the output protocol exactly.`;
 }

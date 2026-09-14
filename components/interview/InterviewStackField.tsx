@@ -35,6 +35,7 @@ export function InterviewStackField({
   primaryStackId,
   roleId,
   onChange,
+  onStacksChange,
 }: {
   defaultStackIds: string[];
   defaultCustom: string;
@@ -43,6 +44,8 @@ export function InterviewStackField({
   primaryStackId?: string | null;
   roleId?: string | null;
   onChange: (label: string) => void;
+  /** The catalog ids behind the label — these drive the question count. */
+  onStacksChange?: (ids: string[]) => void;
 }) {
   const [selected, setSelected] = useState<string[]>(defaultStackIds);
   const [custom, setCustom] = useState(defaultCustom);
@@ -63,6 +66,10 @@ export function InterviewStackField({
   useEffect(() => {
     onChange(label);
   }, [label, onChange]);
+
+  useEffect(() => {
+    onStacksChange?.(selected);
+  }, [selected, onStacksChange]);
 
   // Suggestions are the profile's stacks, primary first, minus what's chosen.
   const suggestions = useMemo(() => {

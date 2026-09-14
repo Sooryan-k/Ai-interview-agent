@@ -1,4 +1,4 @@
-import { EVAL_SENTINEL, END_MARKER } from "@/lib/schemas";
+import { EVAL_SENTINEL } from "@/lib/schemas";
 
 /**
  * Canned AI responses used when GEMINI_MOCK=1. Lets the entire app be
@@ -375,16 +375,55 @@ const mockCodeReview = {
     "Iterate once, storing seen values in a set/dict and checking for target−x as you go.",
 };
 
-/** Scripted interviewer turns so a full mock interview can be run offline. */
+/**
+ * Scripted interviewer turns so a full mock interview can be run offline.
+ *
+ * Two things this deliberately does NOT do, because an earlier version did both
+ * and made a mocked session look like a broken one:
+ *  - It never runs out. The pool cycles, so a 30-question round produces 30
+ *    questions instead of repeating a canned goodbye from question 5 onward.
+ *  - It never emits END_MARKER. Ending is the server's decision now; a fixture
+ *    that says "that's all we have time for" on turn 4 reads exactly like the
+ *    early-termination bug it isn't.
+ *
+ * The eval it proposes is mid-range and honest about being a guess. The server
+ * recomputes the score from the candidate's actual words either way, so a
+ * non-answer still lands on zero here.
+ */
+const MOCK_QUESTIONS: { topic: string; q: string }[] = [
+  { topic: "scoping", q: "Can you explain the difference between let, const and var, and when you'd reach for each?" },
+  { topic: "hoisting", q: "What actually happens when you access a let variable before its declaration, and why?" },
+  { topic: "event loop", q: "Walk me through what logs first: a Promise.resolve().then or a setTimeout with delay 0?" },
+  { topic: "closures", q: "What is a closure, and what's a bug you'd expect someone to hit with one in a loop?" },
+  { topic: "equality", q: "Why does == behave differently from ===, and which do you reach for by default?" },
+  { topic: "prototypes", q: "How does prototypal inheritance differ from classical inheritance?" },
+  { topic: "async", q: "What problem do async and await solve that raw promises didn't?" },
+  { topic: "error handling", q: "How would you handle a rejected promise inside an async function?" },
+  { topic: "modules", q: "What's the practical difference between a default export and a named export?" },
+  { topic: "immutability", q: "Why does const not stop you from mutating an object, and what would?" },
+  { topic: "debouncing", q: "How would you stop a search input from firing a request on every keystroke?" },
+  { topic: "memory", q: "What's a memory leak you've seen in a long-running front end, and what caused it?" },
+  { topic: "http caching", q: "How would you decide between a cache-control header and an ETag?" },
+  { topic: "indexes", q: "When does adding a database index make a query slower rather than faster?" },
+  { topic: "transactions", q: "What does an atomic transaction guarantee you that a sequence of writes doesn't?" },
+];
+
 function mockTurn(turnIdx: number): string {
-  const turns = [
-    // First AI turn: greeting + first question, eval is null (no prior answer).
-    `Hi — I'll be running your technical screen today. Let's ease in: can you explain the difference between let, const and var in JavaScript, and when you'd reach for each?${EVAL_SENTINEL}null`,
-    `Good — you touched on scoping, which is the core of it. Follow-up: what actually happens when you access a let variable before its declaration, and why?${EVAL_SENTINEL}{"score": 7, "note": "Solid scoping explanation with an example; missed the temporal dead zone.", "tags": ["javascript", "scoping"]}`,
-    `Nice. Let's switch gears to async. Walk me through what this logs and why: a Promise.resolve().then vs a setTimeout with delay 0.${EVAL_SENTINEL}{"score": 6, "note": "Correct on hoisting mechanics, hesitant on TDZ terminology.", "tags": ["javascript", "hoisting"]}`,
-    `That's a reasonable mental model. Thanks — that's all we have time for today. You showed solid fundamentals; we'll put together detailed feedback now.\n${END_MARKER}${EVAL_SENTINEL}{"score": 7, "note": "Got microtask vs macrotask ordering right at a high level.", "tags": ["javascript", "event-loop"]}`,
-  ];
-  return turns[Math.min(turnIdx, turns.length - 1)];
+  const { topic, q } = MOCK_QUESTIONS[turnIdx % MOCK_QUESTIONS.length];
+  const lead =
+    turnIdx === 0
+      ? "Hi — I'll be running your technical screen today. Let's ease in: "
+      : "Thanks. Next: ";
+  const message = `${lead}${q}`;
+
+  const evalJson =
+    turnIdx === 0
+      ? "null"
+      : `{"verdict": "partially_correct", "criteria": {"correctness": 5, "depth": 4, "structure": 6, "clarity": 6}, "note": "Mock eval — the server recomputes this from the real answer.", "model_answer": "A complete answer would name the mechanism and one trade-off.", "tags": ["mock"]}`;
+
+  const questionJson = `{"stack": "", "topic": ${JSON.stringify(topic)}, "difficulty": "medium", "text": ${JSON.stringify(q)}}`;
+
+  return `${message}${EVAL_SENTINEL}{"eval": ${evalJson}, "question": ${questionJson}}`;
 }
 
 export function mockResponse(kind: MockKind, turnIdx = 0): string {

@@ -9,6 +9,7 @@ import { ResumeUpload } from "@/components/settings/ResumeUpload";
 import { NotificationToggle } from "@/components/settings/NotificationToggle";
 import { VoicePicker } from "@/components/interview/VoicePicker";
 import { ProfileStacksForm } from "@/components/stacks/ProfileStacksForm";
+import { QuestionHistory } from "@/components/settings/QuestionHistory";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -58,6 +59,8 @@ export default async function SettingsPage() {
             primaryStackId: profile?.primary_stack_id ?? null,
           }}
         />
+
+        <QuestionHistory stackIds={profile?.stack_ids ?? []} />
 
         <ResumeUpload
           initialStruct={parsedStruct.success ? parsedStruct.data : null}
