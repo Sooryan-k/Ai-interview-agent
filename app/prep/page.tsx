@@ -5,6 +5,7 @@ import { Brain, Plus } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
 import { PageShell } from "@/components/PageShell";
 import { Roadmap } from "@/components/prep/Roadmap";
+import { PathSwitcher, type PathSummary } from "@/components/prep/PathSwitcher";
 import { Button } from "@/components/ui/button";
 import { CurriculumSchema } from "@/lib/schemas";
 
@@ -68,6 +69,23 @@ export default async function PrepPage({
     (t) => statusMap[t.key] === "mastered"
   ).length;
 
+  // Every path the user has, for the switcher. Progress is counted the same
+  // way as the headline above, so the tab and the page can't disagree.
+  const paths: PathSummary[] = enrollments.map((e) => {
+    const row = Array.isArray(e.curricula) ? e.curricula[0] : e.curricula;
+    const shape = CurriculumSchema.safeParse(row?.structure);
+    const topics = shape.success
+      ? shape.data.levels.flatMap((l) => l.modules.flatMap((m) => m.topics))
+      : [];
+    const status = (e.topic_status ?? {}) as Record<string, string>;
+    return {
+      curriculumId: e.curriculum_id,
+      label: row?.stack_label ?? "Untitled path",
+      mastered: topics.filter((t) => status[t.key] === "mastered").length,
+      total: topics.length,
+    };
+  });
+
   return (
     <>
       <AppNav />
@@ -76,13 +94,6 @@ export default async function PrepPage({
         description={`${masteredCount} of ${allTopics.length} topics mastered · ${structure.levels.length} levels`}
         actions={
           <>
-            {enrollments.length > 1 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                render={<Link href="/dashboard">All paths</Link>}
-              />
-            )}
             <Button
               variant="ghost"
               size="sm"
@@ -104,6 +115,7 @@ export default async function PrepPage({
           </>
         }
       >
+        <PathSwitcher paths={paths} currentId={selected.curriculum_id} />
 
         <Roadmap
           curriculumId={selected.curriculum_id}
