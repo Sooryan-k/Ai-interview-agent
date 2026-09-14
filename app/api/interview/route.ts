@@ -81,9 +81,11 @@ export async function POST(request: Request) {
       : null;
   const repoUrl =
     typeof body?.repoUrl === "string" ? body.repoUrl.trim().slice(0, 300) : "";
+  // Roomy enough for the picker's six official names joined with " + "; a hard
+  // truncation here would leave a half-written technology name in the report.
   let roleTrack =
     typeof body?.roleTrack === "string" && body.roleTrack.trim()
-      ? body.roleTrack.trim().slice(0, 80)
+      ? body.roleTrack.trim().slice(0, 160)
       : "";
 
   // If launched from a curriculum, derive the role track and validate the level.

@@ -6,7 +6,7 @@ import { AppNav } from "@/components/AppNav";
 import { Button } from "@/components/ui/button";
 import { NewInterviewForm } from "@/components/interview/NewInterviewForm";
 import { CurriculumSchema } from "@/lib/schemas";
-import { stackName, stackNames } from "@/lib/stacks";
+import { resolveStackList } from "@/lib/stacks";
 
 export default async function NewInterviewPage({
   searchParams,
@@ -56,13 +56,24 @@ export default async function NewInterviewPage({
     .maybeSingle();
 
   const stackIds: string[] = profile?.stack_ids ?? [];
-  if (!curriculumId) {
-    // Prefer the technologies they actually chose over the free-text job title.
-    const primary = profile?.primary_stack_id;
-    defaultRoleTrack =
-      (primary ? stackName(primary) : stackNames(stackIds)[0]) ??
-      profile?.target_role ??
-      "";
+
+  // What the stack field starts with. A curriculum-scoped round inherits that
+  // path's label (resolved back to catalog ids so it renders as chips); a plain
+  // round starts on their primary technology, which they can change or add to.
+  let defaultStackIds: string[] = [];
+  let defaultCustom = "";
+  if (defaultRoleTrack) {
+    const { ids } = resolveStackList(defaultRoleTrack);
+    defaultStackIds = ids;
+    // Keep the original wording only when nothing in it was recognised, so a
+    // label like "React + Node.js (Full-Stack)" doesn't drag its role suffix in.
+    if (ids.length === 0) defaultCustom = defaultRoleTrack;
+  } else if (profile?.primary_stack_id) {
+    defaultStackIds = [profile.primary_stack_id];
+  } else if (stackIds.length > 0) {
+    defaultStackIds = [stackIds[0]];
+  } else if (profile?.target_role) {
+    defaultCustom = profile.target_role;
   }
 
   // Empty state: an interview needs something to be about.
@@ -92,7 +103,11 @@ export default async function NewInterviewPage({
           </div>
         )}
         <NewInterviewForm
-          defaultRoleTrack={defaultRoleTrack}
+          defaultStackIds={defaultStackIds}
+          defaultCustom={defaultCustom}
+          suggestedStackIds={stackIds}
+          primaryStackId={profile?.primary_stack_id}
+          roleId={profile?.role_id}
           curriculumId={curriculumId}
           level={level}
           levelTitle={levelTitle}

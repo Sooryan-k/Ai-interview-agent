@@ -31,6 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currency";
 import { VoicePicker } from "@/components/interview/VoicePicker";
+import { InterviewStackField } from "@/components/interview/InterviewStackField";
 import { toast } from "sonner";
 
 const ROUNDS = [
@@ -51,13 +52,24 @@ const DIFFICULTIES = [
 ];
 
 export function NewInterviewForm({
-  defaultRoleTrack,
+  defaultStackIds,
+  defaultCustom,
+  suggestedStackIds,
+  primaryStackId,
+  roleId,
   curriculumId,
   level,
   levelTitle,
   defaultRoundType,
 }: {
-  defaultRoleTrack: string;
+  /** Catalog ids preselected in the stack field. */
+  defaultStackIds: string[];
+  /** Free-text part of the default label the catalog couldn't resolve. */
+  defaultCustom: string;
+  /** The user's saved profile stacks, offered as one-tap suggestions. */
+  suggestedStackIds: string[];
+  primaryStackId?: string | null;
+  roleId?: string | null;
   curriculumId?: string;
   level?: number;
   levelTitle?: string;
@@ -65,7 +77,7 @@ export function NewInterviewForm({
   defaultRoundType?: string;
 }) {
   const router = useRouter();
-  const [roleTrack, setRoleTrack] = useState(defaultRoleTrack);
+  const [roleTrack, setRoleTrack] = useState("");
   const [roundType, setRoundType] = useState(() =>
     ROUNDS.some((r) => r.value === defaultRoundType)
       ? (defaultRoundType as string)
@@ -82,7 +94,7 @@ export function NewInterviewForm({
 
   async function start() {
     if (!roleTrack.trim()) {
-      toast.error("What role/stack is this interview for?");
+      toast.error("Pick at least one technology for this interview.");
       return;
     }
     if (roundType === "repo" && !repoUrl.trim()) {
@@ -137,13 +149,14 @@ export function NewInterviewForm({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-1.5">
-          <Label htmlFor="role">Role / stack</Label>
-          <Input
-            id="role"
-            value={roleTrack}
-            onChange={(e) => setRoleTrack(e.target.value)}
-            placeholder="e.g. React + Node.js"
-            maxLength={80}
+          <Label>Role / stack</Label>
+          <InterviewStackField
+            defaultStackIds={defaultStackIds}
+            defaultCustom={defaultCustom}
+            suggestedIds={suggestedStackIds}
+            primaryStackId={primaryStackId}
+            roleId={roleId}
+            onChange={setRoleTrack}
           />
         </div>
 
