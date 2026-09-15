@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { stackName } from "@/lib/stacks";
 
 const ROUNDS = [
   { value: "technical", label: "Technical" },
@@ -27,7 +28,7 @@ const DIFFS = ["easy", "medium", "hard"] as const;
 export default async function BankPage({
   searchParams,
 }: {
-  searchParams: Promise<{ round?: string; diff?: string }>;
+  searchParams: Promise<{ round?: string; diff?: string; stack?: string }>;
 }) {
   const sp = await searchParams;
   const round = ROUNDS.some((r) => r.value === sp.round)
@@ -43,18 +44,41 @@ export default async function BankPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Role track = the user's most recent prep path.
-  const { data: enrollment } = await supabase
-    .from("user_track_progress")
-    .select("curricula (stack_label)")
-    .eq("user_id", user.id)
-    .order("updated_at", { ascending: false })
-    .limit(1)
+  // Every technology the user has, not just the most recently touched path.
+  // Sorting by updated_at and taking the first meant the bank silently showed
+  // one stack, and which one changed as they studied.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("stack_ids, primary_stack_id")
+    .eq("id", user.id)
     .maybeSingle();
-  const cur = Array.isArray(enrollment?.curricula)
-    ? enrollment?.curricula[0]
-    : enrollment?.curricula;
-  const roleTrack = cur?.stack_label ?? "Software Engineering";
+
+  const stackTabs = (profile?.stack_ids ?? [])
+    .map((id: string) => ({ id, label: stackName(id) ?? id }))
+    .filter((t: { label: string }) => Boolean(t.label));
+
+  // Fall back to the prep paths for users who predate the stack catalog.
+  if (stackTabs.length === 0) {
+    const { data: enrollments } = await supabase
+      .from("user_track_progress")
+      .select("curricula (stack_label)")
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false });
+    for (const e of enrollments ?? []) {
+      const cur = Array.isArray(e.curricula) ? e.curricula[0] : e.curricula;
+      if (cur?.stack_label) {
+        stackTabs.push({ id: cur.stack_label, label: cur.stack_label });
+      }
+    }
+  }
+
+  const activeStack =
+    stackTabs.find((t: { id: string }) => t.id === sp.stack) ??
+    stackTabs.find(
+      (t: { id: string }) => t.id === profile?.primary_stack_id
+    ) ??
+    stackTabs[0];
+  const roleTrack = activeStack?.label ?? "Software Engineering";
 
   const { data: questions } = await supabase
     .from("question_bank")
@@ -65,7 +89,8 @@ export default async function BankPage({
     .order("created_at", { ascending: true })
     .limit(50);
 
-  const filterHref = (r: string, d: string) => `/prep/bank?round=${r}&diff=${d}`;
+  const filterHref = (r: string, d: string, st = activeStack?.id) =>
+    `/prep/bank?round=${r}&diff=${d}${st ? `&stack=${encodeURIComponent(st)}` : ""}`;
 
   return (
     <>
@@ -82,6 +107,24 @@ export default async function BankPage({
 
         {/* Filters */}
         <div className="mb-6 space-y-2">
+          {stackTabs.length > 1 && (
+            <div className="flex flex-wrap gap-1.5 border-b pb-2">
+              {stackTabs.map((t: { id: string; label: string }) => (
+                <Link
+                  key={t.id}
+                  href={filterHref(round, diff, t.id)}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs transition-colors",
+                    activeStack?.id === t.id
+                      ? "border-primary bg-primary/10 font-medium"
+                      : "hover:bg-accent"
+                  )}
+                >
+                  {t.label}
+                </Link>
+              ))}
+            </div>
+          )}
           <div className="flex flex-wrap gap-1.5">
             {ROUNDS.map((r) => (
               <Link

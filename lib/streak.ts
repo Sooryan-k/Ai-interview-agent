@@ -11,6 +11,11 @@ export function utcDay(d: Date = new Date()): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** The calendar day before a YYYY-MM-DD date. Pure — no clock read. */
+export function previousDay(day: string): string {
+  return utcDay(new Date(Date.parse(`${day}T00:00:00Z`) - 86_400_000));
+}
+
 /** Pure transition: given the stored state and today, compute the next state. */
 export function nextStreak(
   lastActive: string | null,

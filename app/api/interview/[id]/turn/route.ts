@@ -177,7 +177,7 @@ export async function POST(
       supabase
         .from("profiles")
         .select(
-          "target_role, skills, role_id, role_other, stack_ids, primary_stack_id"
+          "skills, role_id, role_other, stack_ids, primary_stack_id"
         )
         .eq("id", user.id)
         .maybeSingle(),
@@ -229,7 +229,6 @@ export async function POST(
     plan,
     questionNumber,
     exclusions,
-    targetRole: profile?.target_role,
     // Falls back to a guess from their stacks when they haven't confirmed a
     // role yet — framing only, never written back to the profile.
     roleId:

@@ -3,28 +3,22 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/AppNav";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CurriculumSchema } from "@/lib/schemas";
-import { Flame, Mic, Target, TrendingDown } from "lucide-react";
-import { utcDay } from "@/lib/streak";
+import { Flame } from "lucide-react";
+import { previousDay, utcDay } from "@/lib/streak";
 import { PageShell } from "@/components/PageShell";
 import { DailyDrill } from "@/components/dashboard/DailyDrill";
-import { SkillRadar } from "@/components/dashboard/SkillRadar";
-import { WeaknessHeatmap } from "@/components/dashboard/WeaknessHeatmap";
-import { DeliveryTrends } from "@/components/dashboard/DeliveryTrends";
 import {
   aggregateSkills,
   aggregateDelivery,
   buildHeatmap,
+  filterByStack,
+  stacksWithData,
   type EvalTurnRow,
 } from "@/lib/analytics";
+import { stackName } from "@/lib/stacks";
+import { InsightTabs } from "@/components/dashboard/InsightTabs";
 import { LevelPanel } from "@/components/dashboard/LevelPanel";
 import { RolePrompt } from "@/components/stacks/RolePrompt";
 import { PrepPathsList } from "@/components/dashboard/PrepPathsList";
@@ -50,7 +44,7 @@ export default async function DashboardPage() {
       supabase
         .from("interviews")
         .select(
-          "id, role_track, round_type, difficulty, status, started_at, reports (overall_score)"
+          "id, role_track, round_type, difficulty, status, started_at, stack_ids, reports (overall_score)"
         )
         .eq("user_id", user.id)
         .order("started_at", { ascending: false })
@@ -66,7 +60,7 @@ export default async function DashboardPage() {
 
   // Show the flame only while the streak is alive (active today or yesterday).
   const today = utcDay();
-  const yesterday = utcDay(new Date(Date.now() - 86_400_000));
+  const yesterday = previousDay(today);
   const streakAlive =
     profile?.last_active_date === today ||
     profile?.last_active_date === yesterday;
@@ -76,13 +70,9 @@ export default async function DashboardPage() {
     id: iv.id,
     started_at: iv.started_at,
     role_track: iv.role_track,
+    stack_ids: (iv.stack_ids ?? []) as string[],
   }));
-  let skills: ReturnType<typeof aggregateSkills> = [];
-  let heatmap: ReturnType<typeof buildHeatmap> = { interviews: [], rows: [] };
-  let delivery: ReturnType<typeof aggregateDelivery> = {
-    points: [],
-    insight: null,
-  };
+  let evalRows: EvalTurnRow[] = [];
   if (interviewMeta.length > 0) {
     const { data: evalTurns } = await supabase
       .from("turns")
@@ -93,13 +83,41 @@ export default async function DashboardPage() {
       )
       .eq("speaker", "user")
       .not("eval", "is", null);
-    const rows = (evalTurns ?? []) as EvalTurnRow[];
-    skills = aggregateSkills(rows);
-    heatmap = buildHeatmap(rows, interviewMeta);
-    delivery = aggregateDelivery(rows, interviewMeta);
+    evalRows = (evalTurns ?? []) as EvalTurnRow[];
   }
+
+  // Insights are computed per technology as well as overall. Merging every
+  // stack into one average was hiding the useful signal: "strong in React,
+  // weak in PostgreSQL" collapsed into a single mid-range number.
+  const stackTabs = stacksWithData(interviewMeta);
+  const buildInsights = (stackId: string | null) => {
+    const scoped = filterByStack(evalRows, interviewMeta, stackId);
+    return {
+      stackId,
+      label: stackId ? stackName(stackId) ?? stackId : "All stacks",
+      skills: aggregateSkills(scoped.rows),
+      heatmap: buildHeatmap(scoped.rows, scoped.interviews),
+      delivery: aggregateDelivery(scoped.rows, scoped.interviews),
+    };
+  };
+
+  const insightViews = [
+    buildInsights(null),
+    ...(stackTabs.length > 1 ? stackTabs.map((id: string) => buildInsights(id)) : []),
+  ].filter(
+    (v, i) =>
+      // Keep "All stacks" always; drop per-stack views with nothing to show.
+      i === 0 ||
+      v.skills.length > 0 ||
+      v.heatmap.rows.length > 0 ||
+      v.delivery.points.length > 0
+  );
+
+  const overall = insightViews[0];
   const hasInsights =
-    skills.length >= 3 || heatmap.rows.length > 0 || delivery.points.length >= 2;
+    overall.skills.length >= 3 ||
+    overall.heatmap.rows.length > 0 ||
+    overall.delivery.points.length >= 2;
 
   // ---- XP inputs (derived from existing data; 2 extra count queries) ----
   const completedInterviews = (interviews ?? []).filter((iv) => {
@@ -212,59 +230,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Insights — computed from data the app already collects, zero AI cost */}
-        {hasInsights && (
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold">Your insights</h2>
-            <div className="grid gap-4 lg:grid-cols-2">
-              {skills.length >= 3 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <Target className="size-4 text-primary" /> Skill radar
-                    </CardTitle>
-                    <CardDescription>
-                      Average answer score per skill across your interviews
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <SkillRadar data={skills} />
-                  </CardContent>
-                </Card>
-              )}
-              {heatmap.rows.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <TrendingDown className="size-4 text-primary" /> Weak spots
-                    </CardTitle>
-                    <CardDescription>
-                      Where to focus next — weakest skills first
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <WeaknessHeatmap data={heatmap} />
-                  </CardContent>
-                </Card>
-              )}
-              {delivery.points.length >= 2 && (
-                <Card className="lg:col-span-2">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <Mic className="size-4 text-primary" /> Delivery coaching
-                    </CardTitle>
-                    <CardDescription>
-                      {delivery.insight ??
-                        "How your speaking delivery is trending across voice interviews"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <DeliveryTrends points={delivery.points} />
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </section>
-        )}
+        {hasInsights && <InsightTabs views={insightViews} />}
 
         {/* Prep paths */}
         <section className="space-y-3">

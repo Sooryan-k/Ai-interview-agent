@@ -20,12 +20,19 @@ const TARGET_CHARS = 7000;
 
 type Supa = Awaited<ReturnType<typeof createClient>>;
 
+/**
+ * Enrols the user in a curriculum.
+ *
+ * No longer writes profiles.target_role: that column predates role_id and
+ * kept a second, free-text answer to "what role are you targeting" that could
+ * disagree with the one the user actually picked. role_id is now the only
+ * source, set through /api/profile/stacks.
+ */
 async function enroll(
   supabase: Supa,
   userId: string,
   curriculumId: string,
-  experience: string,
-  targetRole: string | null
+  experience: string
 ) {
   await supabase.from("user_track_progress").upsert(
     {
@@ -36,12 +43,6 @@ async function enroll(
     },
     { onConflict: "user_id,curriculum_id", ignoreDuplicates: true }
   );
-  if (targetRole) {
-    await supabase
-      .from("profiles")
-      .update({ target_role: targetRole })
-      .eq("id", userId);
-  }
 }
 
 export async function POST(request: Request) {
@@ -57,8 +58,6 @@ export async function POST(request: Request) {
   const stack = typeof body?.stack === "string" ? body.stack.trim() : "";
   const experience =
     typeof body?.experience === "string" ? body.experience : "beginner";
-  const targetRole =
-    typeof body?.targetRole === "string" ? body.targetRole.trim() : null;
 
   if (!stack || stack.length < 2 || stack.length > 80) {
     return NextResponse.json({ error: "invalid stack" }, { status: 400 });
@@ -74,7 +73,7 @@ export async function POST(request: Request) {
     .eq("stack_key", stackKey)
     .maybeSingle();
   if (cached) {
-    await enroll(supabase, user.id, cached.id, experience, targetRole);
+    await enroll(supabase, user.id, cached.id, experience);
     return NextResponse.json({ curriculumId: cached.id, cached: true });
   }
 
@@ -146,7 +145,7 @@ export async function POST(request: Request) {
         }
 
         send({ stage: "Saving your path", pct: 97 });
-        await enroll(supabase, user.id, curriculumId, experience, targetRole);
+        await enroll(supabase, user.id, curriculumId, experience);
 
         send({ stage: "Ready", pct: 100, curriculumId });
       } catch (err) {

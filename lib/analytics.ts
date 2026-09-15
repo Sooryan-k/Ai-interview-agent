@@ -5,7 +5,13 @@
 
 export interface EvalTurnRow {
   interview_id: string;
-  eval: { score: number; note?: string; tags?: string[] } | null;
+  eval: {
+    score: number;
+    note?: string;
+    tags?: string[];
+    /** Since the scoring rewrite — lets us tell "didn't answer" from "wrong". */
+    verdict?: string;
+  } | null;
   speech_metrics: {
     wpm?: number;
     fillers?: number;
@@ -20,34 +26,84 @@ export interface InterviewMeta {
   id: string;
   started_at: string;
   role_track: string;
+  /** Catalog ids the round covered. Empty for rounds predating the catalog. */
+  stack_ids?: string[];
+}
+
+/**
+ * Restricts rows to the interviews that covered a given technology.
+ *
+ * Passing null means "all stacks" — the default view. This is what makes the
+ * dashboard aggregate per stack instead of merging every technology's scores
+ * into one undifferentiated average.
+ */
+export function filterByStack(
+  rows: EvalTurnRow[],
+  interviews: InterviewMeta[],
+  stackId: string | null
+): { rows: EvalTurnRow[]; interviews: InterviewMeta[] } {
+  if (!stackId) return { rows, interviews };
+  const matching = interviews.filter((iv) =>
+    (iv.stack_ids ?? []).includes(stackId)
+  );
+  const ids = new Set(matching.map((iv) => iv.id));
+  return {
+    rows: rows.filter((r) => ids.has(r.interview_id)),
+    interviews: matching,
+  };
+}
+
+/** Stacks that actually have interview data behind them, most-covered first. */
+export function stacksWithData(interviews: InterviewMeta[]): string[] {
+  const counts = new Map<string, number>();
+  for (const iv of interviews) {
+    for (const id of iv.stack_ids ?? []) {
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([id]) => id);
 }
 
 // ---------- Skill radar ----------
 export interface SkillStat {
   skill: string;
-  /** 0-100 (avg eval score × 10) */
+  /** 0-100 (avg eval score × 10), over ANSWERED questions only. */
   score: number;
   samples: number;
+  /** Questions on this skill the candidate declined to answer. */
+  skipped: number;
 }
 
 export function aggregateSkills(rows: EvalTurnRow[], topN = 8): SkillStat[] {
-  const byTag = new Map<string, { total: number; n: number }>();
+  const byTag = new Map<string, { total: number; n: number; skipped: number }>();
   for (const row of rows) {
     if (!row.eval || typeof row.eval.score !== "number") continue;
+    // An unanswered question is a gap in coverage, not a measured score of 0.
+    // Averaging those in would rank a skill they declined to discuss the same
+    // as one they got wrong, which points them at the wrong thing to study.
+    const skipped = row.eval.verdict === "unanswered";
     for (const raw of row.eval.tags ?? []) {
       const tag = raw.trim().toLowerCase();
       if (!tag) continue;
-      const cur = byTag.get(tag) ?? { total: 0, n: 0 };
-      cur.total += row.eval.score;
-      cur.n += 1;
+      const cur = byTag.get(tag) ?? { total: 0, n: 0, skipped: 0 };
+      if (skipped) {
+        cur.skipped += 1;
+      } else {
+        cur.total += row.eval.score;
+        cur.n += 1;
+      }
       byTag.set(tag, cur);
     }
   }
   return [...byTag.entries()]
-    .map(([skill, { total, n }]) => ({
+    .filter(([, { n }]) => n > 0)
+    .map(([skill, { total, n, skipped }]) => ({
       skill,
       score: Math.round((total / n) * 10),
       samples: n,
+      skipped,
     }))
     .sort((a, b) => b.samples - a.samples) // most-practiced first
     .slice(0, topN);
@@ -80,6 +136,7 @@ export function buildHeatmap(
   for (const row of rows) {
     const col = colIdx.get(row.interview_id);
     if (col === undefined || !row.eval) continue;
+    if (row.eval.verdict === "unanswered") continue; // coverage gap, not a score
     for (const raw of row.eval.tags ?? []) {
       const tag = raw.trim().toLowerCase();
       if (!tag) continue;

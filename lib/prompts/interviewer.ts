@@ -19,7 +19,6 @@ export interface InterviewerConfig {
   difficulty: string;
   interviewerName: string;
   questionCount: number;
-  targetRole?: string | null;
   jdText?: string | null;
   skills?: Record<string, unknown> | null;
   topicScope?: { title: string; objective: string }[];
@@ -163,7 +162,6 @@ ${cfg.repo.digest}
   }
 
   const candidateBits: string[] = [];
-  if (cfg.targetRole) candidateBits.push(`Target role: ${cfg.targetRole}`);
   if (cfg.jdText)
     candidateBits.push(`Job description they're preparing for:\n${cfg.jdText.slice(0, 2000)}`);
   if (cfg.skills && Object.keys(cfg.skills).length > 0)
