@@ -51,7 +51,7 @@ export default async function NewInterviewPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("target_role, role_id, stack_ids, primary_stack_id")
+    .select("role_id, stack_ids, primary_stack_id")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -72,8 +72,6 @@ export default async function NewInterviewPage({
     defaultStackIds = [profile.primary_stack_id];
   } else if (stackIds.length > 0) {
     defaultStackIds = [stackIds[0]];
-  } else if (profile?.target_role) {
-    defaultCustom = profile.target_role;
   }
 
   // Empty state: an interview needs something to be about.
